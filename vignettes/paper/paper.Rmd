@@ -21,15 +21,15 @@ link-citations: true
 editor_options: 
   chunk_output_type: console
 abstract: |
-Text of abstract
+  Text of abstract
 keywords: |
-keyword 1; keyword 2; keyword 3
+  keyword 1; keyword 2; keyword 3
 highlights: |
-These are the highlights. 
+  These are the highlights. 
 vignette: >
-%\VignetteIndexEntry{Vignette Title}
-%\VignetteEncoding{UTF-8}
-%\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 ```{r setup, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE, collapse=TRUE, results = 'hide'}
@@ -166,34 +166,34 @@ plot_summary <- function(x){
   (x %>% 
      dplyr::arrange(-`p affected`,`p affected CI lower`) %>%
      ggplot(mapping = ggplot2::aes(x = Dataset %>%
-                            reorder(-`p affected CI lower`) %>%
-                            reorder(-`p affected`),
-                          y = `p affected`
+                                     reorder(-`p affected CI lower`) %>%
+                                     reorder(-`p affected`),
+                                   y = `p affected`
      )) +
      ggplot2::geom_pointrange(ggplot2::aes(ymin = `p affected CI lower`,
-                                  ymax = `p affected CI upper`,
-                                  text = paste0(Dataset,"\n",
-                                                "Taxon NISP recorded: ", `n recorded`,"\n",
-                                                "Prop. affected: ", `p affected` %>% 
-                                                  round(digits = 3),"\n"
-                                  ))) +
+                                           ymax = `p affected CI upper`,
+                                           text = paste0(Dataset,"\n",
+                                                         "Taxon NISP recorded: ", `n recorded`,"\n",
+                                                         "Prop. affected: ", `p affected` %>% 
+                                                           round(digits = 3),"\n"
+                                           ))) +
      xlab("") +
      ylab("Proportion Affected") +
      # coord_flip() +
      ggplot2::theme(legend.position = "none",
-           axis.text.x=element_text(angle = 90,
-                                    hjust = 1,
-                                    vjust = 0.5))) %>%
+                    axis.text.x=element_text(angle = 90,
+                                             hjust = 1,
+                                             vjust = 0.5))) %>%
     plotly::ggplotly(tooltip = "text") %>%
     plotly::config(displaylogo = F,
-           scrollZoom = F,
-           collaborate = FALSE,
-           modeBarButtonsToRemove = list("toggleSpikelines",
-                                         "hoverClosestCartesian",
-                                         "hoverCompareCartesian",
-                                         "resetScale2d",
-                                         "select2d",
-                                         "lasso2d")) %>% 
+                   scrollZoom = F,
+                   collaborate = FALSE,
+                   modeBarButtonsToRemove = list("toggleSpikelines",
+                                                 "hoverClosestCartesian",
+                                                 "hoverCompareCartesian",
+                                                 "resetScale2d",
+                                                 "select2d",
+                                                 "lasso2d")) %>% 
     plotly::layout(margin = list(b=150, l=50))
 }
 
@@ -253,8 +253,7 @@ integration.data <-
   dplyr::slice(rep(1:n(),times = count)) %>%
   # Remove count column (it is no longer meaningful)
   dplyr::select(-`count`,
-                -`count column`) %T>%
-  readr::write_csv("../data/derived_data/tdar-integration-SWTP_raw.csv") %>%
+                -`count column`) %>%
   # Drop the sort columns; we will get sort orders from ontologies
   dplyr::select(`Dataset/Table Name`,
                 Weight,
