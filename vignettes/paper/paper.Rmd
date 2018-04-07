@@ -20,19 +20,12 @@ csl: "../templates/society-for-american-archaeology.csl" # Insert path for the b
 link-citations: true
 editor_options: 
   chunk_output_type: console
-abstract: |
-  Text of abstract
-keywords: |
-  keyword 1; keyword 2; keyword 3
-highlights: |
-  These are the highlights. 
-vignette: >
-  %\VignetteIndexEntry{Vignette Title}
-  %\VignetteEncoding{UTF-8}
-  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 ```{r setup, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE, collapse=TRUE, results = 'hide'}
+# Load the package for this vignette
+library(swtp)
+
 # Set the behavior for printing scientific notation
 options(digits = 3, scipen = -2)
 
@@ -46,33 +39,6 @@ knitr::opts_chunk$set(echo = FALSE,
                       cache = FALSE,
                       out.width = "100%",
                       fig.height = 5
-)
-
-# A directory for outputting figures
-figures <- "./figures"
-
-## A vector of all packages used in this script
-all_packages <- c("tdar", "treecats", # Packages for integration analyses
-                  "magrittr", "tidyverse", # Packages for tidy code
-                  "RColorBrewer", "htmlwidgets", "htmltools", "plotly", "DT",
-                  "bibtex", "knitcitations", "kableExtra", "psych") # Plotting and rmarkdown
-
-# load required packages, installing as needed
-if(!require("devtools", quietly = TRUE))
-  install.packages("devtools")
-if(!require("tdar", quietly = TRUE))
-  devtools::install_github("bocinsky/tdar")
-if(!require("treecats", quietly = TRUE))
-  devtools::install_github("bocinsky/treecats")
-suppressWarnings(
-  purrr::walk(all_packages, 
-              function(p){
-                if(!require(p, character.only = TRUE)){
-                  devtools::install_cran(p, character.only = TRUE)
-                  library(p, character.only = TRUE)
-                }
-              }
-  )
 )
 
 # A function that summarizes the data for a variable by dataset
@@ -159,7 +125,6 @@ apply_thresholds <- function(x){
                                                  NA, 
                                                  `p affected CI upper`))
 }
-
 
 # A plotting function for the summary data
 plot_summary <- function(x){
