@@ -1,0 +1,27 @@
+Package: swtp
+Title: The Southwest Taphonomic Protocol
+Version: 0.0.0.9000
+Authors@R: person("Kyle", "Bocinsky", email = "bocinsky@gmail.com", role = c("aut", "cre"))
+Description: This is the Southwest Taphonomic Protocol.
+Depends: R (>= 3.4.4)
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Imports: bookdown,
+    dplyr,
+    magrittr,
+    RColorBrewer,
+    htmlwidgets,
+    htmltools,
+    plotly,
+    DT,
+    bibtex,
+    knitcitations,
+    kableExtra,
+    psych,
+    rlang
+Remotes: bocinsky/tdar,
+    bocinsky/treecats

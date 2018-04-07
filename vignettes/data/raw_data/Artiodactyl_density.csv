@@ -1,0 +1,17 @@
+Element,Proximal/distal portion,Density,FUI
+Astragalus,,0.59,
+Atlas,,0.14,10.2
+Calcaneus,,0.64,
+Femur,Distal,0.28,100
+Humerus,Distal,0.63,36.8
+Radius,Distal,0.43,25.8
+Tibia,Distal,0.5,62.8
+Ulna,Distal,0.44,
+Mandible,,0.51,11.5
+Pelvis,,0.29,49.3
+Femur,Proximal,0.41,100
+Humerus,Proximal,0.24,36.8
+Radius,Proximal,0.42,25.8
+Tibia,Proximal,0.3,62.8
+Ulna,Proximal,0.3,
+Scapula,,0.36,44.7
