@@ -4,7 +4,8 @@ Version: 0.0.0.9000
 Authors@R: person("Kyle", "Bocinsky", email = "bocinsky@gmail.com", role = c("aut", "cre"))
 Description: This is the Southwest Taphonomic Protocol.
 Depends: R (>= 3.4.4),
-    magrittr
+    magrittr,
+    rlang
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -19,8 +20,7 @@ Imports: bookdown,
     bibtex,
     knitcitations,
     kableExtra,
-    psych,
-    rlang
+    psych
 Remotes: bocinsky/tdar,
     bocinsky/treecats,
     r-lib/pkgdown

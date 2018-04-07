@@ -130,10 +130,10 @@ apply_thresholds <- function(x){
 plot_summary <- function(x){
   (x %>% 
      dplyr::arrange(-`p affected`,`p affected CI lower`) %>%
-     ggplot(mapping = ggplot2::aes(x = Dataset %>%
-                                     reorder(-`p affected CI lower`) %>%
-                                     reorder(-`p affected`),
-                                   y = `p affected`
+     ggplot2::ggplot(mapping = ggplot2::aes(x = Dataset %>%
+                                              reorder(-`p affected CI lower`) %>%
+                                              reorder(-`p affected`),
+                                            y = `p affected`
      )) +
      ggplot2::geom_pointrange(ggplot2::aes(ymin = `p affected CI lower`,
                                            ymax = `p affected CI upper`,
@@ -142,13 +142,13 @@ plot_summary <- function(x){
                                                          "Prop. affected: ", `p affected` %>% 
                                                            round(digits = 3),"\n"
                                            ))) +
-     xlab("") +
-     ylab("Proportion Affected") +
+     ggplot2::xlab("") +
+     ggplot2::ylab("Proportion Affected") +
      # coord_flip() +
      ggplot2::theme(legend.position = "none",
-                    axis.text.x=element_text(angle = 90,
-                                             hjust = 1,
-                                             vjust = 0.5))) %>%
+                    axis.text.x = ggplot2::element_text(angle = 90,
+                                                        hjust = 1,
+                                                        vjust = 0.5))) %>%
     plotly::ggplotly(tooltip = "text") %>%
     plotly::config(displaylogo = F,
                    scrollZoom = F,
@@ -212,7 +212,7 @@ integration.data <-
                 Weight = ifelse(Weight == 0, NA, Weight)) %>%
   # Set the count column to 1 if NA, otherwise don't change
   dplyr::mutate(count = as.character(`count column`),
-                count = if_else(is.na(count) | count == ".", "1.0", count),
+                count = dplyr::if_else(is.na(count) | count == ".", "1.0", count),
                 count = as.integer(count)) %>%
   # Repeat rows with more than observation per record
   dplyr::slice(rep(1:n(),times = count)) %>%
@@ -617,7 +617,7 @@ bone_weight <- function(taxon){
   integration.data %>%
     dplyr::filter(Taxon %in% taxon) %>%
     dplyr::group_by(Dataset) %>%
-    summarise(
+    dplyr::summarise(
       `n taxon` = n(),
       `n weight recorded` = sum(!is.na(Weight)),
       `Weight (mean)` = mean(Weight, na.rm = T) %>% 
@@ -638,45 +638,45 @@ bone_weight <- function(taxon){
 bone_weight_plot <- function(x){
   (x %>%
      dplyr::arrange(-`Weight (median)`) %>%
-     ggplot(mapping = aes(x = Dataset %>%
-                            reorder(-`Weight (median)`),
-                          y = `Weight (median)`#,
-                          # color = Dataset %>%
-                          #   reorder(-`Weight (median)`)
+     ggplot2::ggplot(mapping = ggplot2::aes(x = Dataset %>%
+                                              reorder(-`Weight (median)`),
+                                            y = `Weight (median)`#,
+                                            # color = Dataset %>%
+                                            #   reorder(-`Weight (median)`)
      )) +
-     ggplot2::geom_pointrange(aes(ymin = `Weight (IQR—lower)`,
-                                  ymax = `Weight (IQR—upper)`,
-                                  text = paste0(Dataset,"\n",
-                                                "Median bone weight: ", `Weight (median)` %>%
-                                                  round(digits = 3),"\n",
-                                                "Mean bone weight: ", `Weight (mean)` %>%
-                                                  round(digits = 3),"\n"))) +
-     ggplot2::geom_point(aes(y = `Weight (mean)`,
-                             text = paste0(Dataset,"\n",
-                                           "Median bone weight: ", `Weight (median)` %>%
-                                             round(digits = 3),"\n",
-                                           "Mean bone weight: ", `Weight (mean)` %>%
-                                             round(digits = 3),"\n")),
+     ggplot2::geom_pointrange(ggplot2::aes(ymin = `Weight (IQR—lower)`,
+                                           ymax = `Weight (IQR—upper)`,
+                                           text = paste0(Dataset,"\n",
+                                                         "Median bone weight: ", `Weight (median)` %>%
+                                                           round(digits = 3),"\n",
+                                                         "Mean bone weight: ", `Weight (mean)` %>%
+                                                           round(digits = 3),"\n"))) +
+     ggplot2::geom_point(ggplot2::aes(y = `Weight (mean)`,
+                                      text = paste0(Dataset,"\n",
+                                                    "Median bone weight: ", `Weight (median)` %>%
+                                                      round(digits = 3),"\n",
+                                                    "Mean bone weight: ", `Weight (mean)` %>%
+                                                      round(digits = 3),"\n")),
                          shape = 21,
                          fill = NA) +
-     xlab("") +
-     ylab("Bone Weight (g)") +
+     ggplot2::xlab("") +
+     ggplot2::ylab("Bone Weight (g)") +
      # coord_flip() +
-     theme(legend.position="none",
-           axis.text.x=element_text(angle = 90,
-                                    hjust = 1,
-                                    vjust = 0.5))) %>%
+     ggplot2::theme(legend.position = "none",
+                    axis.text.x = ggplot2::element_text(angle = 90,
+                                                        hjust = 1,
+                                                        vjust = 0.5))) %>%
     plotly::ggplotly(tooltip = "text") %>%
-    config(displaylogo = F,
-           scrollZoom = F,
-           collaborate = FALSE,
-           modeBarButtonsToRemove = list("toggleSpikelines",
-                                         "hoverClosestCartesian",
-                                         "hoverCompareCartesian",
-                                         "resetScale2d",
-                                         "select2d",
-                                         "lasso2d")) %>% 
-    layout(margin = list(b=150,l=50))
+    plotly::config(displaylogo = F,
+                   scrollZoom = F,
+                   collaborate = FALSE,
+                   modeBarButtonsToRemove = list("toggleSpikelines",
+                                                 "hoverClosestCartesian",
+                                                 "hoverCompareCartesian",
+                                                 "resetScale2d",
+                                                 "select2d",
+                                                 "lasso2d")) %>% 
+    plotly::layout(margin = list(b=150,l=50))
 }
 ```
 
@@ -735,7 +735,7 @@ Proportion of complete artiodactyl astragals
 
 art_phalanxes <- integration.data %>%
   dplyr::filter(Taxon %in% c("Artiodactyla"),
-                Element %in% (integration.data$Element %>% tct_get_descendents("3rd Phalanx"))) %>%
+                Element %in% (integration.data$Element %>% treecats::tct_get_descendents("3rd Phalanx"))) %>%
   var_summary(Completeness) %>%
   affected_summary(`<25%`) %>%
   apply_element_thresholds()
@@ -790,7 +790,7 @@ art_elements <-
                 `Proximal/distal`) %>%
   dplyr::mutate(Element = as.character(Element))
 
-art_elements$Element[art_elements$Element %in% (integration.data$Element %>% tct_get_descendents("Pelvic Girdle"))] <- "Pelvis"
+art_elements$Element[art_elements$Element %in% (integration.data$Element %>% treecats::tct_get_descendents("Pelvic Girdle"))] <- "Pelvis"
 
 art_elements %<>%
   dplyr::filter(Element %in% c("Femur",
@@ -801,33 +801,33 @@ art_elements %<>%
                 `Proximal/distal` == "Complete"
   ) %>%
   dplyr::mutate(`Proximal/distal` = "Proximal") %>%
-  bind_rows(art_elements %>%
-              dplyr::filter(Element %in% c("Femur",
-                                           "Humerus",
-                                           "Radius",
-                                           "Tibia",
-                                           "Ulna"),
-                            `Proximal/distal` == "Complete"
-              ) %>%
-              dplyr::mutate(`Proximal/distal` = "Distal")) %>%
-  bind_rows(art_elements %>%
-              dplyr::filter(Element %in% c("Femur",
-                                           "Humerus",
-                                           "Radius",
-                                           "Tibia",
-                                           "Ulna"),
-                            `Proximal/distal` %in% c("Proximal","Distal")
-              )) %>%
-  bind_rows(art_elements %>%
-              dplyr::filter(Element %in% c("Astragalus",
-                                           "Atlas",
-                                           "Calcaneus",
-                                           "Mandible",
-                                           "Pelvis",
-                                           "Scapula")) %>%
-              dplyr::mutate(`Proximal/distal` = NA)) %>%
+  dplyr::bind_rows(art_elements %>%
+                     dplyr::filter(Element %in% c("Femur",
+                                                  "Humerus",
+                                                  "Radius",
+                                                  "Tibia",
+                                                  "Ulna"),
+                                   `Proximal/distal` == "Complete"
+                     ) %>%
+                     dplyr::mutate(`Proximal/distal` = "Distal")) %>%
+  dplyr::bind_rows(art_elements %>%
+                     dplyr::filter(Element %in% c("Femur",
+                                                  "Humerus",
+                                                  "Radius",
+                                                  "Tibia",
+                                                  "Ulna"),
+                                   `Proximal/distal` %in% c("Proximal","Distal")
+                     )) %>%
+  dplyr::bind_rows(art_elements %>%
+                     dplyr::filter(Element %in% c("Astragalus",
+                                                  "Atlas",
+                                                  "Calcaneus",
+                                                  "Mandible",
+                                                  "Pelvis",
+                                                  "Scapula")) %>%
+                     dplyr::mutate(`Proximal/distal` = NA)) %>%
   dplyr::group_by_all() %>%
-  count() %>%
+  dplyr::count() %>%
   dplyr::right_join(expand.grid(Dataset = integration.data$Dataset %>% 
                                   unique(),
                                 Element = c("Femur",
@@ -879,39 +879,39 @@ tabler(art_survivorship)
 ```{r art-survivorship-plot}
 
 (art_survivorship %>%
-   ggplot(mapping = aes(x = Dataset %>%
-                          reorder(-`Spearman's rho`) %>%
-                          reorder(`p`),
-                        y = `Spearman's rho`#,
-                        # color = Dataset %>%
-                        #   reorder(-`Spearman's rho`) %>%
-                        #   reorder(`p`)
+   ggplot2::ggplot(mapping = ggplot2::aes(x = Dataset %>%
+                                            reorder(-`Spearman's rho`) %>%
+                                            reorder(`p`),
+                                          y = `Spearman's rho`#,
+                                          # color = Dataset %>%
+                                          #   reorder(-`Spearman's rho`) %>%
+                                          #   reorder(`p`)
    )) +
-   ggplot2::geom_pointrange(aes(ymin = `CI lower`,
-                                ymax = `CI upper`,
-                                text = paste0(Dataset,"\n",
-                                              "Spearman's rho: ", `Spearman's rho` %>%
-                                                round(digits = 3),"\n",
-                                              "p: ",`p` %>%
-                                                round(digits = 3)
-                                ))) +
-   xlab("") +
-   ylab("Spearman's rho") +
-   theme(legend.position="none",
-         axis.text.x=element_text(angle = 90,
-                                  hjust = 1,
-                                  vjust = 0.5))) %>%
+   ggplot2::geom_pointrange(ggplot2::aes(ymin = `CI lower`,
+                                         ymax = `CI upper`,
+                                         text = paste0(Dataset,"\n",
+                                                       "Spearman's rho: ", `Spearman's rho` %>%
+                                                         round(digits = 3),"\n",
+                                                       "p: ",`p` %>%
+                                                         round(digits = 3)
+                                         ))) +
+   ggplot2::xlab("") +
+   ggplot2::ylab("Spearman's rho") +
+   ggplot2::theme(legend.position = "none",
+                  axis.text.x = ggplot2::element_text(angle = 90,
+                                                      hjust = 1,
+                                                      vjust = 0.5))) %>%
   plotly::ggplotly(tooltip = "text") %>%
-  config(displaylogo = F,
-         scrollZoom = F,
-         collaborate = FALSE,
-         modeBarButtonsToRemove = list("toggleSpikelines",
-                                       "hoverClosestCartesian",
-                                       "hoverCompareCartesian",
-                                       "resetScale2d",
-                                       "select2d",
-                                       "lasso2d")) %>% 
-  layout(margin = list(b=150, l=50))
+  plotly::config(displaylogo = F,
+                 scrollZoom = F,
+                 collaborate = FALSE,
+                 modeBarButtonsToRemove = list("toggleSpikelines",
+                                               "hoverClosestCartesian",
+                                               "hoverCompareCartesian",
+                                               "resetScale2d",
+                                               "select2d",
+                                               "lasso2d")) %>% 
+  plotly::layout(margin = list(b=150, l=50))
 
 ```
 
@@ -1052,28 +1052,30 @@ tabler(art_survivorship)
 ### Intertaxonomic comparison {- .tabset .tabset-fade .tabset-pills}
 ```{r tax-compare}
 tax_summary <- function(x, taxa, var){
-  quo_var <- enquo(var)
+  quo_var <- rlang::enquo(var)
   
   x %>%
     dplyr::filter(Taxon %in% taxa) %>%
     dplyr::select(Dataset, Taxon, !!quo_var) %>%
     # dplyr::mutate(Taxon = fct_collapse(Taxon, "Meleagris gallopavo" = c("Meleagris gallopavo"))) %>%
-    dplyr::mutate(Taxon = tct_drop(Taxon)) %>%
+    dplyr::mutate(Taxon = treecats::tct_drop(Taxon)) %>%
     dplyr::group_by(Dataset, Taxon, !!quo_var) %>%
-    count() %>%
+    dplyr::count() %>%
     dplyr::group_by(Dataset,Taxon) %>%
     tidyr::spread(!!quo_var,
                   n,
                   drop = FALSE) %>%
-    dplyr::mutate_all(.funs = function(x){ifelse(is.na(x),
-                                                 0,
-                                                 x)}) %>%
+    dplyr::mutate_all(.funs = function(x){
+      ifelse(is.na(x),
+             0,
+             x)
+    }) %>%
     dplyr::ungroup()
 }
 
 # A function to further summarize variable data
 tax_affected_summary <- function(x, ...){
-  affected_var <- quos(...)
+  affected_var <- rlang::quos(...)
   
   x %>%
     dplyr::mutate(
@@ -1094,17 +1096,19 @@ tax_affected_summary <- function(x, ...){
                                            !!!affected_var)) %>% 
         as.integer(),
       `p affected` = `n affected`/`n recorded`,
-      `p affected CI lower` = map2_dbl(`n affected`,
+      `p affected CI lower` = purrr::map2_dbl(`n affected`,
                                        `n recorded`,
-                                       function(x,y){ifelse(y > 0, 
-                                                            binom.test(x,y)$conf.int[[1]],
-                                                            NA)
+                                       function(x,y){
+                                         ifelse(y > 0, 
+                                                binom.test(x,y)$conf.int[[1]],
+                                                NA)
                                        }),
-      `p affected CI upper` = map2_dbl(`n affected`,
+      `p affected CI upper` = purrr::map2_dbl(`n affected`,
                                        `n recorded`,
-                                       function(x,y){ifelse(y > 0, 
-                                                            binom.test(x,y)$conf.int[[2]],
-                                                            NA)
+                                       function(x,y){
+                                         ifelse(y > 0, 
+                                                binom.test(x,y)$conf.int[[2]],
+                                                NA)
                                        }))  %>%
     dplyr::select(Dataset,
                   Taxon,
@@ -1122,42 +1126,42 @@ tax_plotter <- function(x){
      # dplyr::mutate(order = rank(`p affected`, ties.method = "first"),
      #               order = ifelse(Taxon == "Artiodactyla",order,NA)) %>%
      # dplyr::arrange(-order,Taxon,Dataset) %>%
-     ggplot(mapping = aes(x = Dataset,
-                          y = `p affected`,
-                          color = Taxon
+     ggplot2::ggplot(mapping = ggplot2::aes(x = Dataset,
+                                            y = `p affected`,
+                                            color = Taxon
      )) +
-     ggplot2::geom_pointrange(aes(ymin = `p affected CI lower`,
-                                  ymax = `p affected CI upper`,
-                                  text = paste0(Dataset,"\n",
-                                                Taxon,"\n",
-                                                "Prop. affected: ", `p affected` %>% 
-                                                  round(digits = 3),"\n"
-                                  )),
+     ggplot2::geom_pointrange(ggplot2::aes(ymin = `p affected CI lower`,
+                                           ymax = `p affected CI upper`,
+                                           text = paste0(Dataset,"\n",
+                                                         Taxon,"\n",
+                                                         "Prop. affected: ", `p affected` %>% 
+                                                           round(digits = 3),"\n"
+                                           )),
                               position = dodge) +
      ggplot2::scale_color_brewer(type = "qual", palette = "Dark2") +
-     xlab("") +
-     ylab("Proportion Affected") +
-     labs(color="Taxon") +
+     ggplot2::xlab("") +
+     ggplot2::ylab("Proportion Affected") +
+     ggplot2::labs(color="Taxon") +
      # coord_flip() +
-     theme(axis.text.x=element_text(angle = 90,
-                                    hjust = 1,
-                                    vjust = 0.5))) %>%
+     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90,
+                                                        hjust = 1,
+                                                        vjust = 0.5))) %>%
     plotly::ggplotly(tooltip = "text") %>%
-    config(displaylogo = F,
-           scrollZoom = F,
-           collaborate = FALSE,
-           modeBarButtonsToRemove = list("toggleSpikelines",
-                                         "hoverClosestCartesian",
-                                         "hoverCompareCartesian",
-                                         "resetScale2d",
-                                         "select2d",
-                                         "lasso2d")) %>% 
-    layout(margin = list(b=150, l=50),
-           legend = list(
-             orientation = "h",
-             y = 1,
-             yanchor = "bottom"
-           ))
+    plotly::config(displaylogo = F,
+                   scrollZoom = F,
+                   collaborate = FALSE,
+                   modeBarButtonsToRemove = list("toggleSpikelines",
+                                                 "hoverClosestCartesian",
+                                                 "hoverCompareCartesian",
+                                                 "resetScale2d",
+                                                 "select2d",
+                                                 "lasso2d")) %>% 
+    plotly::layout(margin = list(b=150, l=50),
+                   legend = list(
+                     orientation = "h",
+                     y = 1,
+                     yanchor = "bottom"
+                   ))
 }
 
 tax_tabler <- function(x){
@@ -1235,7 +1239,7 @@ lag_elements <-
                 `Proximal/distal`) %>%
   dplyr::mutate(Element = as.character(Element))
 
-lag_elements$Element[lag_elements$Element %in% (integration.data$Element %>% tct_get_descendents("Pelvic Girdle"))] <- "Pelvis"
+lag_elements$Element[lag_elements$Element %in% (integration.data$Element %>% treecats::tct_get_descendents("Pelvic Girdle"))] <- "Pelvis"
 
 
 lag_elements %<>%
@@ -1247,33 +1251,33 @@ lag_elements %<>%
                 `Proximal/distal` == "Complete"
   ) %>%
   dplyr::mutate(`Proximal/distal` = "Proximal") %>%
-  bind_rows(lag_elements %>%
-              dplyr::filter(Element %in% c("Femur",
-                                           "Humerus",
-                                           "Radius",
-                                           "Tibia",
-                                           "Ulna"),
-                            `Proximal/distal` == "Complete"
-              ) %>%
-              dplyr::mutate(`Proximal/distal` = "Distal")) %>%
-  bind_rows(lag_elements %>%
-              dplyr::filter(Element %in% c("Femur",
-                                           "Humerus",
-                                           "Radius",
-                                           "Tibia",
-                                           "Ulna"),
-                            `Proximal/distal` %in% c("Proximal","Distal")
-              )) %>%
-  bind_rows(lag_elements %>%
-              dplyr::filter(Element %in% c("Astragalus",
-                                           "Atlas",
-                                           "Calcaneus",
-                                           "Mandible",
-                                           "Pelvis",
-                                           "Scapula")) %>%
-              dplyr::mutate(`Proximal/distal` = NA)) %>%
+  dplyr::bind_rows(lag_elements %>%
+                     dplyr::filter(Element %in% c("Femur",
+                                                  "Humerus",
+                                                  "Radius",
+                                                  "Tibia",
+                                                  "Ulna"),
+                                   `Proximal/distal` == "Complete"
+                     ) %>%
+                     dplyr::mutate(`Proximal/distal` = "Distal")) %>%
+  dplyr::bind_rows(lag_elements %>%
+                     dplyr::filter(Element %in% c("Femur",
+                                                  "Humerus",
+                                                  "Radius",
+                                                  "Tibia",
+                                                  "Ulna"),
+                                   `Proximal/distal` %in% c("Proximal","Distal")
+                     )) %>%
+  dplyr::bind_rows(lag_elements %>%
+                     dplyr::filter(Element %in% c("Astragalus",
+                                                  "Atlas",
+                                                  "Calcaneus",
+                                                  "Mandible",
+                                                  "Pelvis",
+                                                  "Scapula")) %>%
+                     dplyr::mutate(`Proximal/distal` = NA)) %>%
   dplyr::group_by_all() %>%
-  count() %>%
+  dplyr::count() %>%
   dplyr::right_join(expand.grid(Dataset = integration.data$Dataset %>% unique(),
                                 Element = c("Femur",
                                             "Humerus",
@@ -1334,29 +1338,29 @@ meg_elements %<>%
                 `Proximal/distal` == "Complete"
   ) %>%
   dplyr::mutate(`Proximal/distal` = "Proximal") %>%
-  bind_rows(meg_elements %<>%
-              dplyr::filter(Element %in% c("Carpometacarpus",
-                                           "Scapula",
-                                           "Humerus",
-                                           "Ulna",
-                                           "Tarsometatarsus",
-                                           "Femur",
-                                           "Tibiotarsus"),
-                            `Proximal/distal` == "Complete"
-              ) %>%
-              dplyr::mutate(`Proximal/distal` = "Distal")) %>%
-  bind_rows(meg_elements %<>%
-              dplyr::filter(Element %in% c("Carpometacarpus",
-                                           "Scapula",
-                                           "Humerus",
-                                           "Ulna",
-                                           "Tarsometatarsus",
-                                           "Femur",
-                                           "Tibiotarsus"),
-                            `Proximal/distal` %in% c("Proximal","Distal")
-              )) %>%
+  dplyr::bind_rows(meg_elements %<>%
+                     dplyr::filter(Element %in% c("Carpometacarpus",
+                                                  "Scapula",
+                                                  "Humerus",
+                                                  "Ulna",
+                                                  "Tarsometatarsus",
+                                                  "Femur",
+                                                  "Tibiotarsus"),
+                                   `Proximal/distal` == "Complete"
+                     ) %>%
+                     dplyr::mutate(`Proximal/distal` = "Distal")) %>%
+  dplyr::bind_rows(meg_elements %<>%
+                     dplyr::filter(Element %in% c("Carpometacarpus",
+                                                  "Scapula",
+                                                  "Humerus",
+                                                  "Ulna",
+                                                  "Tarsometatarsus",
+                                                  "Femur",
+                                                  "Tibiotarsus"),
+                                   `Proximal/distal` %in% c("Proximal","Distal")
+                     )) %>%
   dplyr::group_by_all() %>%
-  count() %>%
+  dplyr::count() %>%
   dplyr::right_join(expand.grid(Dataset = integration.data$Dataset %>% unique(),
                                 Element = c("Carpometacarpus",
                                             "Scapula",
@@ -1403,42 +1407,42 @@ art_survivorship %>%
     dplyr::bind_rows(lag_survivorship) %>%
     dplyr::bind_rows(meg_survivorship) %>%
     dplyr::arrange(Dataset,Taxon) %>%
-    ggplot(mapping = aes(x = Dataset,
-                         y = `Spearman's rho`,
-                         color = Taxon
+    ggplot2::ggplot(mapping = ggplot2::aes(x = Dataset,
+                                           y = `Spearman's rho`,
+                                           color = Taxon
     )) +
-    ggplot2::geom_pointrange(aes(ymin = `CI lower`,
-                                 ymax = `CI upper`,
-                                 text = paste0(Dataset,"\n",
-                                               "Spearman's rho: ", `Spearman's rho` %>%
-                                                 round(digits = 3),"\n",
-                                               "p: ",`p` %>%
-                                                 round(digits = 3)
-                                 )),
+    ggplot2::geom_pointrange(ggplot2::aes(ymin = `CI lower`,
+                                          ymax = `CI upper`,
+                                          text = paste0(Dataset,"\n",
+                                                        "Spearman's rho: ", `Spearman's rho` %>%
+                                                          round(digits = 3),"\n",
+                                                        "p: ",`p` %>%
+                                                          round(digits = 3)
+                                          )),
                              position = dodge) +
     ggplot2::scale_color_brewer(type = "qual", palette = "Dark2") +
-    xlab("") +
-    ylab("Spearman's rho") +
-    labs(color="Taxon") +
-    theme(axis.text.x=element_text(angle = 90,
-                                   hjust = 1,
-                                   vjust = 0.5))) %>%
+    ggplot2::xlab("") +
+    ggplot2::ylab("Spearman's rho") +
+    ggplot2::labs(color="Taxon") +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90,
+                                                       hjust = 1,
+                                                       vjust = 0.5))) %>%
   plotly::ggplotly(tooltip = "text") %>%
-  config(displaylogo = F,
-         scrollZoom = F,
-         collaborate = FALSE,
-         modeBarButtonsToRemove = list("toggleSpikelines",
-                                       "hoverClosestCartesian",
-                                       "hoverCompareCartesian",
-                                       "resetScale2d",
-                                       "select2d",
-                                       "lasso2d")) %>% 
-  layout(margin = list(b=150, l=50),
-         legend = list(
-           orientation = "h",
-           y = 1,
-           yanchor = "bottom"
-         ))
+  plotly::config(displaylogo = F,
+                 scrollZoom = F,
+                 collaborate = FALSE,
+                 modeBarButtonsToRemove = list("toggleSpikelines",
+                                               "hoverClosestCartesian",
+                                               "hoverCompareCartesian",
+                                               "resetScale2d",
+                                               "select2d",
+                                               "lasso2d")) %>% 
+  plotly::layout(margin = list(b=150, l=50),
+                 legend = list(
+                   orientation = "h",
+                   y = 1,
+                   yanchor = "bottom"
+                 ))
 ```
 
 ## References {-}
