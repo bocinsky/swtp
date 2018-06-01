@@ -16,7 +16,7 @@ output:
     includes:
       after_body: tabset-dropdown.html
 bibliography: references.bib
-csl: "../templates/society-for-american-archaeology.csl" # Insert path for the bib-style
+csl: "../templates/journal-of-computer-applications-in-archaeology.csl" # Insert path for the bib-style
 link-citations: true
 editor_options: 
   chunk_output_type: console
