@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 
 # swtp
 
-[![Circle-CI Build Status](https://circleci.com/gh/bocinsky/swtp.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/bocinsky/swtp)
+<!-- [![Circle-CI Build Status](https://circleci.com/gh/bocinsky/swtp.svg?style=shield)](https://circleci.com/gh/bocinsky/swtp) -->
 
 This repository contains the data and code for our paper:
 

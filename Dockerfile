@@ -19,4 +19,4 @@ RUN . /etc/environment \
   && R -e "devtools::install('/swtp', dependencies = TRUE)" \
 
  # render the manuscript
-  && R -e "rmarkdown::render('/swtp/vignettes/paper/paper.Rmd')"
+  && R -e "rmarkdown::render('/swtp/vignettes/paper/swtp.Rmd')"

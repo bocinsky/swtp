@@ -3,6 +3,8 @@
 
 # swtp
 
+<!-- [![Circle-CI Build Status](https://circleci.com/gh/bocinsky/swtp.svg?style=shield)](https://circleci.com/gh/bocinsky/swtp) -->
+
 This repository contains the data and code for our paper:
 
 > Authors, (YYYY). *Title of paper*. Name of journal/book
@@ -10,7 +12,7 @@ This repository contains the data and code for our paper:
 
 Our pre-print is online here:
 
-> Authors, (YYYY). *Title of paper*. Name of journal/book, Accessed 07
+> Authors, (YYYY). *Title of paper*. Name of journal/book, Accessed 08
 > Apr 2018. Online at <https://doi.org/xxx/xxx>
 
 ### How to cite
@@ -18,7 +20,7 @@ Our pre-print is online here:
 Please cite this compendium as:
 
 > Authors, (2018). *Compendium of R code and data for ‘Title of paper’*.
-> Accessed 07 Apr 2018. Online at <https://doi.org/xxx/xxx>
+> Accessed 08 Apr 2018. Online at <https://doi.org/xxx/xxx>
 
 ### How to download or install
 
