@@ -36,7 +36,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       error = FALSE,
                       collapse = TRUE, 
                       results = 'hold',
-                      cache = FALSE,
+                      cache = TRUE,
                       out.width = "100%",
                       fig.height = 5
 )
