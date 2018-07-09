@@ -20,7 +20,8 @@ Imports: bookdown,
     bibtex,
     knitcitations,
     kableExtra,
-    psych
+    psych,
+    readxl
 Remotes: bocinsky/tdar,
     bocinsky/treecats,
     r-lib/pkgdown
