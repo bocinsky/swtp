@@ -21,8 +21,6 @@ csl: "../templates/journal-of-computer-applications-in-archaeology.csl"
 link-citations: true
 editor_options: 
   chunk_output_type: console
-
-
 ---
 
 ```{r setup, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE, collapse=TRUE, cache=FALSE, results = 'hide'}
@@ -40,7 +38,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       error = FALSE,
                       collapse = TRUE, 
                       results = 'hold',
-                      cache = TRUE,
+                      cache = FALSE,
                       out.width = "100%",
                       fig.height = 5
 )
@@ -249,7 +247,7 @@ In a few other cases a single taphonomic variable in our analysis was coded acro
 Once the data sets were uploaded to tDAR, we combined them using tDAR's integration tool [@Kintigh2018]. Integrations use contributor-defined mappings between variable codings in the original data sets and community-defined ontologies to combine data sets with otherwise mutually incompatible categories. The tDAR integration tool is a robust and mature system for combining data sets hosted on tDAR; it allows users to select multiple data sets, choose mutually-mapped ontologies to include in the integration, and export data for further analysis and to share with colleagues.
 
 ```{r get-tdar-integration, results='hide'}
-integration_xlsx <- "../data/raw_data/tdar-integration-SWTP-4.xlsx"
+integration_xlsx <- "../data/raw_data/tdar-integration-SWTP-6.xlsx"
 
 tdar::tdar_login()
 
@@ -454,7 +452,7 @@ tabler(data_overview, "SWTP_Overview")
 
 ### Dataset and variable inclusion after thresholding (“Table 3”)
 
-## Bone surface modification (all taxa) {.tabset .tabset-fade .tabset-pills}
+## Bone surface modification {.tabset .tabset-fade .tabset-pills}
 ### Burning {- .tabset .tabset-dropdown}
 Proportion of assemblage showing evidence of burning
 : Burning is often a result of food preparation or refuse disposal practices and as such, can be an important cultural agent in assemblage formation. However, because burning renders bones more susceptible to fragmentation [@Stiner1995], this variable may also provide insight into post-depositional processes. Burning is assessed by calculating the proportion of specimens (NISP) in the artiodactyl, lagomorph, and *Meleagris gallopavo* assemblages showing signs of exposure to heat (e.g., partial charring, charring, or calcined); these were mapped to "Burned" or "Probably Burned" in the [SWUS Fauna Burning Intensity Ontology](http://core.tdar.org/ontology/3443/fauna-burning-intensity-ontology).

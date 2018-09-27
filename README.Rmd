@@ -37,8 +37,8 @@ You can download the compendium as a zip from from this URL: </archive/master.zi
 
 Or you can install this compendium as an R package, swtp, from GitHub with:
 ```{r gh-installation, eval = FALSE}
-# install.packages("devtools")
-devtools::install_github("bocinsky/swtp")
+# install.packages("remotes")
+remotes::install_github("bocinsky/swtp")
 ```
 ### Licenses
 
