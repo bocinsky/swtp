@@ -12,11 +12,11 @@ jobs:
       - run:
           name: Install remote dependencies
           command: |
-              R -e 'remotes::install_local(".")'
+              R -e 'remotes::install_local(".", force = TRUE)'
       - run:
           name: Check and test
           command: |
-              R -e "rmarkdown::render('vignettes/paper/swtp.Rmd')"
+              R -e "rmarkdown::render('vignettes/swtp.Rmd')"
 
 workflows:
   version: 2

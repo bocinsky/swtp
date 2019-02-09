@@ -12,7 +12,8 @@ LazyData: true
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
-Imports: bookdown,
+Imports: 
+    bookdown,
     dplyr,
     RColorBrewer,
     plotly,
@@ -22,6 +23,16 @@ Imports: bookdown,
     kableExtra,
     psych,
     readxl,
-    pkgdown
+    pkgdown,
+    forcats,
+    ggplot2,
+    htmlwidgets,
+    purrr,
+    readr,
+    stringr,
+    tdar,
+    tibble,
+    tidyr,
+    treecats
 Remotes: github::bocinsky/tdar,
     github::bocinsky/treecats
