@@ -21,7 +21,7 @@ Imports: bookdown,
     knitcitations,
     kableExtra,
     psych,
-    readxl
-Remotes: bocinsky/tdar,
-    bocinsky/treecats,
-    r-lib/pkgdown
+    readxl,
+    pkgdown
+Remotes: github::bocinsky/tdar,
+    github::bocinsky/treecats
