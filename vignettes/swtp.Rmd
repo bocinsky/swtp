@@ -19,8 +19,8 @@ editor_options:
   chunk_output_type: console
 vignette: >
   %\VignetteIndexEntry{The Southwestern Taphonomic Protocol}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 ```{r setup, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE, collapse=TRUE, cache=FALSE, results = 'hide'}
@@ -38,7 +38,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       error = FALSE,
                       collapse = TRUE, 
                       results = 'asis',
-                      cache = TRUE,
+                      cache = FALSE,
                       out.width = "100%",
                       fig.height = 5
 )
