@@ -187,7 +187,7 @@ tabler <- function(x,
     DT::datatable(style = "bootstrap",
                   extensions = c('FixedColumns', 'Buttons'),
                   options = list(
-                    dom = '<"top"lf<"clear">>rt<"bottom"ipB<"clear">>',
+                    dom = '<"top"f<"clear">>rt<"bottom"ipB<"clear">>',
                     buttons = htmlwidgets::JS(paste0("[{extend: 'csvHtml5',title: '",title,"'},{extend: 'print',autoPrint: false}]")),
                     scrollX = TRUE,
                     fixedColumns = list(leftColumns = 1),
@@ -393,7 +393,7 @@ We then added integration columns (Figure \@ref(fig:tdar-instructions-taxon)). T
 knitr::include_graphics("../screenshots/integration_taxon.png")
 ```
 
-Once all integration columns are selected (Figure \@ref(fig:tdar-instructions-all)), we requested the tDAR servers to process the integration. Due to the large amount of data in these datasets, the integrations timed out and we had to request the integration output from the tDAR staff directly. The raw output from our the tDAR integration reported in this paper is available as part of the supplemental information. 
+Once all integration columns are selected (Figure \@ref(fig:tdar-instructions-all)), we requested the tDAR servers to process the integration. Due to the large amount of data in these datasets, the integration tool timed out and we had to request the integration output from the tDAR staff directly (they happily provided it many, many times). The raw output from our the tDAR integration reported in this paper is available as part of the supplemental information.
 
 ```{r tdar-instructions-all, fig.cap='Screen capture of the tDAR integration tool showing the count, display, and integration columns.'}
 knitr::include_graphics("../screenshots/integration_all.png")
@@ -456,7 +456,93 @@ In the initial stages of developing this executable paper we found that there we
 
 Related to thresholds, a number of assemblages used the coding option of "indeterminate." While this meant that the variable was indeed coded for all of the cases, the actual content of that coding did not contribute information to the interpretation of how prevalent the taphonomic condition was in that assemblage. We thus chose to consider those cases uncoded for analyzing taphonomic differences across sites. Therefore sites with more than 60 percent of the cases for each taxon coded as "indeterminate" fell below the minimum of threshold of 40 percent coded and were not included in the calculation of that variable.
 
-Table \@ref(tab:data-overview) shows which datasets were included in each analysis after thresholding.
+Table \@ref(tab:data-inclusion) shows which datasets were included in each analysis for each taxon after thresholding. Table \@ref(tab:data-inclusion-count) provides the number of datasets included in each analysis.
+
+```{r data-inclusion, results='asis'}
+
+data_inclusion <- integration.data %>%
+  dplyr::filter(Taxon %in% c("Artiodactyla","Lagomorpha","Meleagris gallopavo")) %>%
+  dplyr::group_by(Dataset,
+                  Taxon) %>%
+  dplyr::summarise(
+    `NISP` = n(),
+    `Burning` = sum(!(`Burning` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T),
+    `Butchering` = sum(!(`Butchering` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T),
+    `Gnawing` = sum(!(`Gnawing` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T),
+    `Weathering` = sum(!(`Weathering` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T),
+    `Fragmentation` = sum(!(`Completeness` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T),
+    Weight = sum(!is.na(Weight),na.rm = T)
+  ) %>%
+  dplyr::mutate_at(.vars = dplyr::vars(Burning:Weight),
+                   .funs = dplyr::funs(ifelse(NISP >= nisp_threshold &
+                                                . >= (NISP * prop_threshold),
+                                              TRUE,
+                                              FALSE))) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(-NISP) %>%
+  dplyr::left_join(integration.data %>%
+                     dplyr::filter(Taxon %in% c("Artiodactyla"),
+                                   Element %in% c("Astragalus")) %>%
+                     dplyr::group_by(Dataset,
+                                     Taxon) %>%
+                     dplyr::summarise(
+                       `Astragal Completeness` = sum(!(`Completeness` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T) >= nisp_element_threshold
+                     )) %>%
+  dplyr::left_join(integration.data %>%
+                     dplyr::filter(Taxon %in% c("Artiodactyla"),
+                                   Element %in% (integration.data$Element %>% treecats::tct_get_descendents("3rd Phalanx"))) %>%
+                     dplyr::group_by(Dataset,
+                                     Taxon) %>%
+                     dplyr::summarise(
+                       `3rd Phalanx Completeness` = sum(!(`Completeness` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T) >= nisp_element_threshold
+                     )) %>%
+    dplyr::mutate(`Astragal Completeness` = ifelse(is.na(`Astragal Completeness`) & Taxon == "Artiodactyla", FALSE, `Astragal Completeness`),
+                  `3rd Phalanx Completeness` = ifelse(is.na(`3rd Phalanx Completeness`) & Taxon == "Artiodactyla", FALSE, `3rd Phalanx Completeness`),
+                  `Bone Survivorship` = ifelse(Taxon == "Artiodactyla", TRUE, NA))
+
+cat('<table style="width:100%">',
+    paste0("<caption>", "(#tab:data-inclusion)", "Datasets and variables included in this analysis after thresholding.", "</caption>"),
+    "</table>", 
+    sep ="\n")
+
+tabler(data_inclusion, "SWTP_dataset_inclusion_summary")
+
+```
+
+```{r data-inclusion-count, results='asis'}
+data_inclusion_count <- data_inclusion %>%
+  dplyr::select(-Dataset) %>%
+  dplyr::group_by(Taxon) %>%
+  dplyr::summarise_all(.funs = function(x){
+    out <- sum(x, na.rm = T)
+    ifelse(out == 0,
+           NA,
+           out)
+  })
+
+cat('<table style="width:100%">',
+    paste0("<caption>", "(#tab:data-inclusion-count)", "The number of datasets included in each analysis after thresholding.", "</caption>"),
+    "</table>", 
+    sep ="\n")
+
+data_inclusion_count %>% 
+  t() %>%
+  magrittr::extract(-1,) %>%
+  as.data.frame() %>%
+  magrittr::set_colnames(data_inclusion_count$Taxon) %>%
+    DT::datatable(style = "bootstrap",
+                  extensions = c('FixedColumns', 'Buttons'),
+                  options = list(
+                    dom = '<"top"<"clear">>rt<"bottom"B<"clear">>',
+                    buttons = htmlwidgets::JS(paste0("[{extend: 'csvHtml5',title: '","SWTP_dataset_inclusion_count","'},{extend: 'print',autoPrint: false}]")),
+                    # scrollX = TRUE,
+                    # fixedColumns = list(leftColumns = 1),
+                    pageLength = 10),
+                  rownames = TRUE)
+
+```
+
+## Bone surface modification {.tabset .tabset-fade .tabset-pills}
 
 ```{r taphon_analyses}
 burning <- function(taxon){
@@ -502,12 +588,7 @@ fragmentation <- function(taxon){
 
 ```
 
-
-
-**Dataset and variable inclusion after thresholding (“Table 3”)**
-
-## Bone surface modification {.tabset .tabset-fade .tabset-pills}
-### Burning {- .tabset .tabset-dropdown}
+### Burning {#burning-main - .tabset .tabset-dropdown}
 Proportion of assemblage showing evidence of burning
 : Burning is often a result of food preparation or refuse disposal practices and as such, can be an important cultural agent in assemblage formation. However, because burning renders bones more susceptible to fragmentation [@Stiner1995], this variable may also provide insight into post-depositional processes. Burning is assessed by calculating the proportion of specimens (NISP) in the artiodactyl, lagomorph, and *Meleagris gallopavo* assemblages showing signs of exposure to heat (e.g., partial charring, charring, or calcined); these were mapped to "Burned" or "Probably Burned" in the [SWUS Fauna Burning Intensity Ontology](http://core.tdar.org/ontology/3443/fauna-burning-intensity-ontology).
 
@@ -523,6 +604,10 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Artiodactyla_Burning")
+
+```
+
+```{r art-burning-plot, fig.cap='Artiodactyl burning data.'}
 plot_summary(out)
 ```
 
@@ -536,6 +621,9 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Lagomorpha_Burning")
+```
+
+```{r lag-burning-plot, fig.cap='Lagomorph burning data.'}
 plot_summary(out)
 ```
 
@@ -549,10 +637,13 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Meleagris_Burning")
+```
+
+```{r meg-burning-plot, fig.cap='*Meleagris gallopavo* burning data.'}
 plot_summary(out)
 ```
 
-### Butchering {.tabset .tabset-dropdown}
+### Butchering {#butchering-main - .tabset .tabset-dropdown}
 Proportion of assemblage showing butchering marks
 : The occurrence cut marks in a faunal assemblage may directly inform on butchering practices and processing techniques. The analysis of cut marks is used in the taphonomic study to evaluate the extent of damage resulting from human subsistence behavior. This variable is assessed by calculating the proportion of specimens (NISP) in the artiodactyl, lagomorph, and *Meleagris gallopavo* assemblages that show evidence of butchering or cut marks; these were mapped to "Butchered" or "Probably Butchered" in the [SWUS Fauna Butchering Ontology](http://core.tdar.org/ontology/3989/fauna-butchering-ontology).
 
@@ -568,6 +659,9 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Artiodactyla_Butchering")
+```
+
+```{r art-butchering-plot, fig.cap='Artiodactyl butchering data.'}
 plot_summary(out)
 ```
 
@@ -581,6 +675,9 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Lagomorpha_Butchering")
+```
+
+```{r lag-butchering-plot, fig.cap='Lagomorph butchering data.'}
 plot_summary(out)
 ```
 
@@ -594,11 +691,15 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Meleagris_Butchering")
+```
+
+```{r meg-butchering-plot, fig.cap='*Meleagris gallopavo* butchering data.'}
 plot_summary(out)
 ```
 
 
-### Gnawing {.tabset .tabset-dropdown}
+
+### Gnawing {#gnawing-main - .tabset .tabset-dropdown}
 Proportion of assemblage showing evidence of gnawing
 : The extent of rodent and carnivore gnawing in an assemblage may provide direct information regarding peri-depositional formation processes. This variable is assessed by calculating the proportion of specimens (NISP) in the artiodactyl, lagomorph, and *Meleagris gallopavo* assemblages that were mapped to "Gnawed" in the [SWUS Fauna Gnawing Ontology](http://core.tdar.org/ontology/3033/fauna-gnawing-ontology).
 
@@ -614,6 +715,9 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Artiodactyla_Gnawing")
+```
+
+```{r art-gnawing-plot, fig.cap='Artiodactyl gnawing data.'}
 plot_summary(out)
 ```
 
@@ -627,6 +731,9 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Lagomorpha_Gnawing")
+```
+
+```{r lag-gnawing-plot, fig.cap='Lagomorph gnawing data.'}
 plot_summary(out)
 ```
 
@@ -640,11 +747,14 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Meleagris_Gnawing")
+```
+
+```{r meg-gnawing-plot, fig.cap='*Meleagris gallopavo* gnawing data.'}
 plot_summary(out)
 ```
 
 
-### Weathering {.tabset .tabset-dropdown}
+### Weathering {#weathering-main - .tabset .tabset-dropdown}
 Proportion of assemblage showing evidence of weathering
 : The extent of weathering within an assemblage may provide direct information regarding peri-depositional formation processes. Weathering is assessed by calculating the proportion of specimens (NISP) in the artiodactyl, lagomorph, and *Meleagris gallopavo* assemblages that were mapped to "Weathered" in the [SWUS Fauna Weathering Ontology](http://core.tdar.org/ontology/3032/fauna-weathering-ontology).
 
@@ -660,8 +770,11 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Artiodactyla_Weathering")
-plot_summary(out)
 
+```
+
+```{r art-weathering-plot, fig.cap='Artiodactyl weathering data.'}
+plot_summary(out)
 ```
 
 #### Lagomorpha {-}
@@ -674,6 +787,9 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Lagomorpha_Weathering")
+```
+
+```{r lag-weathering-plot, fig.cap='Lagomorph weathering data.'}
 plot_summary(out)
 ```
 
@@ -687,12 +803,16 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Meleagris_Weathering")
+
+```
+
+```{r meg-weathering-plot, fig.cap='*Meleagris gallopavo* weathering data.'}
 plot_summary(out)
 ```
 
 
-## Fragmentation intensity {.tabset .tabset-fade .tabset-pills}
-### Fragmentation {.tabset .tabset-dropdown}
+## Fragmentation intensity {- .tabset .tabset-fade .tabset-pills}
+### Fragmentation {#fragmentation-main - .tabset .tabset-dropdown}
 Proportion of assemblage that is highly fragmented
 : The proportion of highly fragmented bone can be used to evaluate the overall degree of fragmentation among assemblages. As noted by Todd and Rapson [-@Todd1988,pp. 33--35], a variety of different processes may result in greater fragmentation of bone elements within an assemblage. These may include pre-depositional factors related to grease and marrow extraction or post-depositional damage resulting from overburden/sedimentary compaction or trampling. The degree of fragmentation of artiodactyl, lagomorph, and *Meleagris gallopavo* bone was assessed in this study by calculating the proportion of bone within each assemblage that was less than 25 percent complete; these were mapped to "<25%" in the [SWUS Fauna Completeness Ontology](http://core.tdar.org/ontology/376370/fauna-completeness-ontology).
 
@@ -708,8 +828,11 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Artiodactyla_Fragmentation")
-plot_summary(out)
 
+```
+
+```{r art-fragmentation-plot, fig.cap='Artiodactyl fragmentation data.'}
+plot_summary(out)
 ```
 
 #### Lagomorpha {-}
@@ -722,6 +845,9 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Lagomorpha_Fragmentation")
+```
+
+```{r lag-fragmentation-plot, fig.cap='Lagomorph fragmentation data.'}
 plot_summary(out)
 ```
 
@@ -735,11 +861,13 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Meleagris_Fragmentation")
+```
+
+```{r meg-fragmentation-plot, fig.cap='*Meleagris gallopavo* fragmentation data.'}
 plot_summary(out)
 ```
 
-
-### Weight{.tabset .tabset-dropdown}
+### Weight {#weight-main - .tabset .tabset-dropdown}
 Bone weight
 : There is a broad correlation between fragment size, count, and weight [@Lyman2008, pp. 102--103]. Calculating the median bone weight for taxa can provide a means for evaluating the degree of fragmentation associated with a specific assemblage. Here, we show the mean, median, and interquartile range (IQR) of bone weights. In the graph below, the closed circles represent the medians, and the open circles represent the means. Unsurprisingly, the weight distributions are universally right skewed, with low numbers of heavier elements increasing the mean well above the median bone weight.
 
@@ -820,8 +948,11 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Artiodactyla_Bone_Weight")
-bone_weight_plot(out)
 
+```
+
+```{r art-bone-weight-plot, fig.cap='Artiodactyl bone weight data.'}
+bone_weight_plot(out)
 ```
 
 #### Lagomorpha {-}
@@ -834,6 +965,9 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Lagomorpha_Bone_Weight")
+```
+
+```{r lag-bone-weight-plot, fig.cap='Lagomorph bone weight data.'}
 bone_weight_plot(out)
 ```
 
@@ -847,12 +981,15 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tabler(out, "SWTP_Meleagris_Bone_Weight")
+```
+
+```{r meg-bone-weight-plot, fig.cap='*Meleagris gallopavo* bone weight data.'}
 bone_weight_plot(out)
 ```
 
-## Assemblage completeness {.tabset .tabset-fade .tabset-pills}
+## Assemblage completeness {- .tabset .tabset-fade .tabset-pills}
 
-### Astragal completeness {}
+### Astragal completeness {#astragal-completeness-main -}
 Proportion of complete artiodactyl astragals
 : @Marean1991 has argued that the extent of completeness of certain dense bone elements, such as carpals and tarsals, within an assemblage may be used to indirectly measure the degree of in situ attrition. Specifically, he posits that because these elements have little or no grease or marrow, they should not be subject to bone fragmenting behaviors by humans or carnivores. Rather, a high degree of fragmentation of large mammal carpals and tarsals more likely reflects the post-burial destruction of bones. Marean [-@Marean1991, p. 687] further notes that if elements as dense as the astragalus or calcaneus are severely damaged within an assemblage, then it is likely that less dense bones have been completely destroyed. To evaluate in situ attritional processes in the current study, the proportion of complete artiodactyl astragals was calculated for each assemblage using the [SWUS Fauna Completeness Ontology](http://core.tdar.org/ontology/376370/fauna-completeness-ontology) as above.
 
@@ -874,14 +1011,14 @@ tabler(art_astragals, "SWTP_Artiodactyla_Astragals")
 ```
 
 
-```{r art-astragals-plot}
+```{r art-astragals-plot, fig.cap='Artiodactyl astragal data.'}
 
 art_astragals %>%
   plot_summary()
 
 ```
 
-### 3rd Phalanx completeness {}
+### 3rd Phalanx completeness {#phalanx-completeness-main -}
 Proportion of complete artiodactyl 3rd phalanxes
 : Following @Marean1991 logic, noted for the astragali, a second completeness variable was included in the protocol---the proportion of completeness for the slightly less dense third phalanx [0.25 bone density value for *Odocoileus spp.*; @Lyman1994]. This addition allows for more detailed examination of the taphonomic patterns associated with *in situ* bone attrition. The proportion of complete 3rd phalanxes was calculated for each assemblage using the [SWUS Fauna Completeness Ontology](http://core.tdar.org/ontology/376370/fauna-completeness-ontology) as above.
 
@@ -903,14 +1040,14 @@ tabler(art_phalanxes, "SWTP_Artiodactyla_Phalanxes")
 ```
 
 
-```{r art-phalanxes-plot}
+```{r art-phalanxes-plot, fig.cap='Artiodactyl phalanx data.'}
 
 art_phalanxes %>%
   plot_summary()
 
 ```
 
-### Bone survivorship and mineral density {}
+### Bone survivorship and mineral density {#survivorship-main -}
 Artiodactyl bone survivorship and bone mineral density
 : A number of taphonomic studies have shown that bone mineral density may be an important factor in skeletal element representation [e.g., @Binford1981; @Kreutzer1992; @Lyman1984; -@Lyman1994; -@Lyman1992]. This research indicates that certain parts of a skeleton are consistently better preserved in archaeological assemblages due to their high structural density [@Lyman1994, pp. 234--258]. To determine if elemental representation within any of the faunal assemblages included in this study had been affected by differential density-mediated attrition, NISP values for 16 different artiodactyl element bone parts---femur (distal/proximal), humerus (distal/proximal), radius (distal/proximal), tibia (distal/proximal), ulna (distal/proximal), pelvis, astragalus, atlas, calcaneus, mandible, and scapula---were compared with bone structural density data [@Lyman1984;-@Lyman1994]. The strength of the relationship between element abundance and bone density was assessed using Spearman’s rank correlation coefficient.
 
@@ -1015,7 +1152,7 @@ tabler(art_survivorship, "SWTP_Artiodactyla_Survivorship")
 
 ```
 
-```{r art-survivorship-plot}
+```{r art-survivorship-plot, fig.cap='Artiodactyl bone survivorship data.'}
 
 (art_survivorship %>%
    ggplot2::ggplot(mapping = ggplot2::aes(x = Dataset %>%
@@ -1176,7 +1313,7 @@ tax_tabler <- function(x, title = "SWTP_Intertaxonomic_Table"){
     DT::datatable(style = "bootstrap",
                   extensions = c('FixedColumns', 'Buttons'),
                   options = list(
-                    dom = '<"top"lf<"clear">>rt<"bottom"ipB<"clear">>',
+                    dom = '<"top"f<"clear">>rt<"bottom"ipB<"clear">>',
                     buttons = htmlwidgets::JS(paste0("[{extend: 'csvHtml5',title: '",title,"'},{extend: 'print',autoPrint: false}]")),
                     scrollX = TRUE,
                     fixedColumns = list(leftColumns = 2),
@@ -1203,8 +1340,10 @@ cat('<table style="width:100%">',
     sep ="\n")
 tax_tabler(tax_burning, "SWTP_Intertaxonomic_Burning")
 
-tax_plotter(tax_burning)
+```
 
+```{r tax-burning-plot, fig.cap='Intertaxonomic comparison of burning data.'}
+tax_plotter(tax_burning)
 ```
 
 ### Butchering {}
@@ -1223,8 +1362,11 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tax_tabler(tax_butchering, "SWTP_Intertaxonomic_Butchering")
-tax_plotter(tax_butchering)
 
+```
+
+```{r tax-butchering-plot, fig.cap='Intertaxonomic comparison of butchering data.'}
+tax_plotter(tax_butchering)
 ```
 
 ### Fragmentation intensity {}
@@ -1242,8 +1384,11 @@ cat('<table style="width:100%">',
     "</table>", 
     sep ="\n")
 tax_tabler(tax_complete, "SWTP_Intertaxonomic_Fragmentation")
-tax_plotter(tax_complete)
 
+```
+
+```{r tax-complete-plot, fig.cap='Intertaxonomic comparison of fragmentation data.'}
+tax_plotter(tax_complete)
 ```
 
 ### Bone survivorship {}
@@ -1426,6 +1571,9 @@ art_survivorship %>%
   dplyr::bind_rows(meg_survivorship) %>%
   tabler()
 
+```
+
+```{r tax-survivorship-plot, fig.cap='Intertaxonomic comparison of bone survivorship data.'}
 (art_survivorship %>%
     dplyr::mutate(Taxon = "Artiodactyla") %>%
     dplyr::bind_rows(lag_survivorship) %>%
@@ -1469,40 +1617,37 @@ art_survivorship %>%
                  ))
 ```
 
-
 -----
 
 ## Discussion
 
 In this paper we immersed ourselves in the application of the Southwestern Taphonomic Protocol (SWTP) to thirty-two late prehispanic faunal assemblages. Our goal has been to compare the taphonomic histories of these datasets to determine whether any are too dissimilar to include in subsequent substantive analyses of anthropological questions.  Application of the SWTP has allowed us to identify several broad patterns that we consider here.
 
-
 ### Variable Use and Utility
 
-In developing the original Southwestern Taphonomic Protocol, @Clark2014 drew from global faunal literature and several pilot analyses to identify those variables most likely to be effective in distinguishing different aspects of taphonomic histories in southwestern faunal assemblages. In our implementation we found that some of these variables are more useful simply because they tend to be coded by more analysts.  More engagement with taphonomic analyses might encourage zooarchaeologists to expand their analyses to include at least some of the other variables used in the protocol. In addition, as we noted earlier in this paper, in some datasets relevant taphonomic data had been coded in a catchall variable that included multiple factors such as butchering, gnawing, and weathering. Coding these variables separately would make them more amenable to taphonomic analysis. The fact that they are already coded in these datasets should make it relatively straightforward to disaggregate the catchall variable since variable states have already been identified. 
-We have realized that, given the relative lack of attention to taphonomic variables, at least in the US Southwest, it is not surprising that bone mineral density has emerged over the decades as a dominant variable in taphonomic analyses. The basic data (element) that this variable requires are available in most datasets.
+In developing the original Southwestern Taphonomic Protocol, @Clark2014 drew from global faunal literature and several pilot analyses to identify those variables most likely to be effective in distinguishing different aspects of taphonomic histories in southwestern faunal assemblages. In our implementation we found that some of these variables are more useful simply because they tend to be coded by more analysts.  More engagement with taphonomic analyses might encourage zooarchaeologists to expand their analyses to include at least some of the other variables used in the protocol. In addition, as we noted earlier in this paper, in some datasets relevant taphonomic data had been coded in a catchall variable that included multiple factors such as butchering, gnawing, and weathering. Coding these variables separately would make them more amenable to taphonomic analysis. The fact that they are already coded in these datasets should make it relatively straightforward to disaggregate the catchall variable since variable states have already been identified.
 
-Table x1 presents the number of datasets for which there were different types of taphonomic data.
-
+We have realized that, given the relative lack of attention to taphonomic variables, at least in the US Southwest, it is not surprising that bone mineral density (used in our bone survivorship analysis) has emerged over the decades as a dominant variable in taphonomic analyses. The basic data (element) that this variable requires are available in most datasets. Table \@ref(tab:data-inclusion-count) presents the number of datasets for which there were different types of taphonomic data.
 
 The least available SWTP data involved specific elements, artiodactyl astragali and 3rd phalanx. For these two variables, sample sizes were often quite small. This resulted in confidence intervals that are generally too large to be useful in distinguishing among sites. 
+
 Sample size is also an issue for the most broadly applicable analysis, bone mineral density and bone survivorship. Even though it was possible to undertake this analysis for all sites, the confidence interval ranges are very broad because calculation of this variable requires counts of specific identifiable elements, which especially for artiodactyls are few in number. Most artiodactyl bone in southwestern archaeological sites is shaft fragments. The small sample sizes associated with specific artiodactyl elements likely influenced the p values generated in the bone mineral analysis. The p values are all non-significant except for Bryant Ranch, which approaches significance being below 0.1. Given the lack of precision in the output from the bone mineral density analysis, it is the other taphonomic variables that were of greater utility in our study.
 
 ### Variable-wise Distinctions among Sites
 
-*Burning*: For the most part, southwestern faunal assemblages are unburned. The one site in these assemblages that stands out for relatively high burning of artiodactyl bone is Frank?s Ruin, which itself was attacked and burned. Overall, the highest burning rates are for artiodactyl bone in general, with lagomorph and turkey less so. The distribution of artiodactyl burned frequencies makes the point that it is the analyst who will determine which sites are too taphonomically different to include in an analysis. Is a 15% burning threshold more appropriate (excluding sites from Albert Porter and above in terms of artiodactyl burning frequency), or should the threshold be above 30% burning (excluding Alameda School and above)?
+*[Burning](#burning-main)*: For the most part, southwestern faunal assemblages are unburned. The one site in these assemblages that stands out for relatively high burning of artiodactyl bone is Frank's Ruin, which itself was attacked and burned (CITATION). Overall, the highest burning rates are for artiodactyl bone in general, with lagomorph and turkey less so. The distribution of artiodactyl burned frequencies makes the point that it is the analyst who will determine which sites are too taphonomically different to include in an analysis. Is a 15% burning threshold more appropriate (excluding sites from Albert Porter and above in terms of artiodactyl burning frequency), or should the threshold be above 30% burning (excluding Alameda School and above)?
 
-*Butchering*: Southwestern fauna rarely show evidence of butchering. In all thirty-two datasets it appears in less than 10% of faunal elements and thus is not a distinguishing variable for the late prehispanic southwest.
+*[Butchering](#butchering-main)*: Southwestern fauna rarely show evidence of butchering. In all thirty-two datasets it appears in less than 10% of faunal elements and thus is not a distinguishing variable for the late prehispanic US Southwest.
 
-*Gnawing*: Gnawing was also recorded on less than 10% of faunal elements, with the exception of the slightly higher frequencies on Sand Canyon and San Antonio de Padua. Thus, it too does not appear to be a distinguishing variable for taphonomic histories in the late prehispanic southwest.
+*[Gnawing](#gnawing-main)*: Gnawing was also recorded on less than 10% of faunal elements, with the exception of the slightly higher frequencies on Sand Canyon and San Antonio de Padua. Thus, it too does not appear to be a distinguishing variable for taphonomic histories in the late prehispanic US Southwest.
 
-*Weathering*: Weathering of faunal bone is also relatively uncommon, at less than 10% frequency for the three taxonomic categories in most of these assemblages. This is not surprising given the dry southwestern climate. Pena Blanca, however, is clearly an outlier with weathering being particularly high for all three taxonomic categories. As we discuss below, however, this high frequency is likely an artifact of the two-variable coding scheme used in recording the fauna from this site. This same scheme was used for the faunal assemblage at San Antonio de Padua, where artiodactyl and turkey elements also appear somewhat more weathered than these taxa from other sites. Artiodactyl elements at Bryant Ranch, and turkey elements at Gran Quivira are also somewhat more weathered, a pattern that cannot be explained by coding schemes. Note that the program does not calculate weathering for lagomorphs at Bryant Ranch as the sample size is below 25.
+*[Weathering](#weathering-main)*: Weathering of faunal bone is also relatively uncommon, at less than 10% frequency for the three taxonomic categories in most of these assemblages. This is not surprising given the dry southwestern climate. Pena Blanca, however, is clearly an outlier with weathering being particularly high for all three taxonomic categories. As we discuss below, however, this high frequency is likely an artifact of the two-variable coding scheme used in recording the fauna from this site. This same scheme was used for the faunal assemblage at San Antonio de Padua, where artiodactyl and turkey elements also appear somewhat more weathered than these taxa from other sites. Artiodactyl elements at Bryant Ranch, and turkey elements at Gran Quivira are also somewhat more weathered, a pattern that cannot be explained by coding schemes. Note that we have not calculated weathering for lagomorphs at Bryant Ranch as the sample size is below 25.
 
-*Fragmentation (<25% complete)*: The distribution of fragmentation rates is relatively continuous but very broad, again making it up to the analyst to decide what the threshold should be for including or excluding faunal assemblages in an analysis based on their degree of fragmentation. A few sites, however, do stand out in terms of higher fragmentation rates (e.g., Kite Pueblo and sites with higher weathering frequencies for artiodactyl bone; LA 12587 for lagomorph and turkey, and San Antonio for turkey).  Pena Blanca is an outlier for all three taxonomic categories. Artiodactyl bone is more fragmented than lagomorph bone in general, which is not surprising given the more intense butchering of larger game. As with Bryant Ranch lagomorphs in the weathering analysis, sample size affected the fragmentation analysis for LA 12587 artiodactyls as the sample size for that site is below 25. Data in the table, however, indicate high fragmentation for this taxonomic category as well. 
+*[Fragmentation intensity](#fragmentation-main)*: The distribution of fragmentation rates is relatively continuous but very broad, again making it up to the analyst to decide what the threshold should be for including or excluding faunal assemblages in an analysis based on their degree of fragmentation. A few sites, however, do stand out in terms of higher fragmentation rates (e.g., Kite Pueblo and sites with higher weathering frequencies for artiodactyl bone; LA 12587 for lagomorph and turkey, and San Antonio de Padua for turkey). Pena Blanca is an outlier for all three taxonomic categories. Artiodactyl bone is more fragmented than lagomorph bone in general, which is not surprising given the more intense butchering of larger game.
 
-*Astragal completeness*: As noted above, the wide confidence intervals make this variable are not terribly helpful, but the data do reinforce the relatively high fragmentation of the San Antonio artiodactyl assemblage.
+*[Astragal completeness](#astragal-completeness-main)*: As noted above, the wide confidence intervals (due to low sample sizes) make this variable are not terribly helpful, but the data do reinforce the relatively high fragmentation of the San Antonio artiodactyl assemblage.
 
-*3rd phalanx completeness*: Again, the confidence intervals are wide, but Pena Blanca and also Pueblo Colorado stand out somewhat.  No other fragmentation analyses, however, indicate that the Pueblo Colorado faunal assemblage is more fragmented than those from the other sites.
+*[3rd Phalanx completeness](#phalanx-completeness-main)*: Again, the confidence intervals are wide, but Pena Blanca and also Pueblo Colorado stand out somewhat.  No other fragmentation analyses, however, indicate that the Pueblo Colorado faunal assemblage is more fragmented than those from the other sites.
 
 ### Interpretation of variable output
 
@@ -1510,13 +1655,13 @@ The immense value of the diversity of variables in the SWTP is that a strong pat
 
 ```{r outliers}
 readr::read_csv("../tables/outliers.csv") %>%
-  knitr::kable(caption = "Sites Identified as Outliers in the Southwestern Taphonomic Analyses.",
+  knitr::kable(caption = "Sites identified as outliers in the SWTP analyses. Sites in brackets are marginal outliers.",
                format = "html") %>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
                             full_width = F)
 ```
 
-The strong outliers in the weathering portion of the analysis, however, alert us to the importance of understanding the nature of the coding scheme the analyst used before assuming that marked differences among sites are behaviorally meaningful. In the case of Pena Blanca and San Antonio de Padua, weathering was coded across two variables, ‘environmental alteration’ which identified the type of weathering on the bone (root etching, polished, corroded, etc.) and ‘environmental degree’, which was coded from light to heavy. At both sites there were high frequencies of ‘root etching’ that was ‘light.’ In consulting with the original faunal analyst, Nancy Akins, she is of the opinion that this kind of weathering was likely not recorded as weathering by other faunal analysts. The apparent high frequency of weathering recorded at those two sites, then, is probably the result of the more fine-grained recording of weathering than actual differences in the proportion of weathered bone from those recorded at other sites.
+The strong outliers in the weathering portion of the analysis, however, alert us to the importance of understanding the nature of the coding scheme the analyst used before assuming that marked differences among sites are behaviorally meaningful. In the case of Pena Blanca and San Antonio de Padua, weathering was coded across two variables, 'environmental alteration' which identified the type of weathering on the bone (root etching, polished, corroded, etc.) and 'environmental degree,' which was coded from light to heavy. At both sites there were high frequencies of 'root etching' that was 'light.' In consulting with the original faunal analyst, Nancy Akins, she is of the opinion that this kind of weathering was likely not recorded as weathering by other faunal analysts. The apparent high frequency of weathering recorded at those two sites, then, is probably the result of the more fine-grained recording of weathering than actual differences in the proportion of weathered bone from those recorded at other sites.
 
 The analysis of these multiple variables also suggests, however, that some that were in the original taphonomic protocol can be removed for late period southwestern faunal assemblages. Astragal and 3rd phalanx completeness information is redundant with the results of the broader fragmentation analysis, and given the sample size issue with these two variables it does not appear to be necessary to include them. Similarly, the relative lack of evidence for butchering and for gnawing on bone, at least for these kinds of southwestern assemblages, indicates that these two variables would not need to be included either.
 
@@ -1529,39 +1674,9 @@ The Fragmentation comparative chart is particularly important for thinking about
 
 In conclusion, the application of the Southwestern Taphonomic Protocol to over thirty late prehispanic southwestern faunal datasets has allowed us to identify those sites whose taphonomic histories appear considerably different than the majority of datasets in our study. It has also highlighted the need for analysts to think about what thresholds in taphonomic alteration they consider too altered to be acceptable for substantive comparative analyses. And we have seen that fragmentation rate differences within and across sites require careful consideration before data from analytical indices like the artiodactyl or lagomorph index are used to assess issues like resource depression and environmental alteration. 
 
-<!-- ## Explore your data before performing an integrated analysis (Kyle) -->
-<!-- ## Only compare datasets with similar types/levels of taphonomic impact, as appropriate (Kate/Tiffany) -->
-<!-- ## Future directions -->
-<!-- ### SWTP R package (the research compendium package for this analysis) (Kyle) -->
-<!-- ### SWTP toolkit (Shiny web tool for comparing a tdar integration to this SWTP analysis) (Kyle) -->
-<!-- ### Widespread adoption of the Southwest Faunal Ontologies (essential for standardizing faunal analyses in the SWUS) (Kate) -->
-
 -----
 
 # References {-}
 
 <!-- The following line ensures the references appear here for the MS Word or HTML output files, rather than right at the end of the document (this will not work for PDF files):  -->
 <div id="refs"></div>
-
-<!-- # Colophon {-} -->
-
-<!-- This report was generated on `r Sys.time()` using the following computational environment and dependencies:  -->
-
-<!-- ```{r colophon, cache = FALSE} -->
-<!-- # which R packages and versions? -->
-<!-- devtools::session_info() -->
-<!-- ``` -->
-
-<!-- The current Git commit details are: -->
-
-<!-- ```{r} -->
-<!-- # what commit is this file at? You may need to change the path value -->
-<!-- # if your Rmd is not in analysis/paper/ -->
-<!-- git2r::repository("../..") -->
-<!-- ``` -->
-
-
-
-
-
-

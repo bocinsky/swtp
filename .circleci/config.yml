@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  linux:
+    docker:
+      - image: rocker/verse:latest
+    steps:
+      - checkout
+      - run:
+          name: Install
+          command: |
+              R -e 'devtools::install(".", dependencies = TRUE, upgrade_dependencies = FALSE)'
+      - run:
+          name: Install remote dependencies
+          command: |
+              R -e 'remotes::install_local(".")'
+      - run:
+          name: Check and test
+          command: |
+              R -e "rmarkdown::render('/swtp/vignettes/paper/swtp.Rmd')"
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - linux

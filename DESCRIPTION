@@ -1,6 +1,6 @@
 Package: swtp
 Title: The Southwest Taphonomic Protocol
-Version: 0.0.0.9000
+Version: 1.0.0.9000
 Authors@R: person("Kyle", "Bocinsky", email = "bocinsky@gmail.com", role = c("aut", "cre"))
 Description: This is the Southwest Taphonomic Protocol.
 Depends: R (>= 3.4.4),
