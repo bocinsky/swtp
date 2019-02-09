@@ -29,3 +29,6 @@ vignettes/*.pdf
 *.knit.md
 .Rproj.user
 inst/doc
+
+# macOS "Icon" files
+Icon?

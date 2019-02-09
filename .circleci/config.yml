@@ -16,7 +16,7 @@ jobs:
       - run:
           name: Check and test
           command: |
-              R -e "rmarkdown::render('/swtp/vignettes/paper/swtp.Rmd')"
+              R -e "rmarkdown::render('vignettes/paper/swtp.Rmd')"
 
 workflows:
   version: 2
