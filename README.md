@@ -3,7 +3,7 @@
 
 # swtp
 
-<!-- [![Circle-CI Build Status](https://circleci.com/gh/bocinsky/swtp.svg?style=shield)](https://circleci.com/gh/bocinsky/swtp) -->
+[![CircleCI](https://circleci.com/gh/bocinsky/swtp.svg?style=shield&circle-token=182c3ee96956e3cc5eac1044a4c177ac28d39d91)](https://circleci.com/gh/bocinsky/swtp)
 
 This repository contains the data and code for our paper:
 
