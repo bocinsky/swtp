@@ -398,7 +398,7 @@ We then added integration columns (Figure \@ref(fig:tdar-instructions-taxon)). T
 knitr::include_graphics("./screenshots/integration_taxon.png")
 ```
 
-Once all integration columns were selected (Figure \@ref(fig:tdar-instructions-all)), we requested the tDAR servers to process the integration. Due to the large amount of data in these datasets, the integration tool timed out and we had to request the integration output from the tDAR staff directly (they happily provided it many, many times). [The raw output from our tDAR integration reported in this paper is available here.](./data/raw_data/tdar-integration-SWTP.xlsx)
+Once all integration columns were selected (Figure \@ref(fig:tdar-instructions-all)), we requested the tDAR servers to process the integration. Due to the large amount of data in these datasets, the integration tool timed out and we had to request the integration output from the tDAR staff directly (they happily provided it many, many times). [The raw output from our tDAR integration reported in this paper is available here.](https://github.com/bocinsky/swtp/raw/master/paper/data/raw_data/tdar-integration-SWTP.xlsx)
 
 ```{r tdar-instructions-all, fig.cap='Screen capture of the tDAR integration tool showing the count, display, and integration columns.'}
 knitr::include_graphics("./screenshots/integration_all.png")
