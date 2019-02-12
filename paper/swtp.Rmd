@@ -409,9 +409,20 @@ The SWTP focuses on three taxonomic categories: artiodactyls, lagomorphs, and tu
 
 The second R package, [*treecats*](https://github.com/bocinsky/treecats), manipulates tree-like categorical data such as the tDAR ontologies and enables users to collapse nested categories in a comprehensive and reproducible way. While the tDAR integration tool allows for collapsing ontologies, it currently depends on the user selecting the appropriate higher-order check boxes, a process that in our experience was tedious and perhaps too error prone to be sufficiently reproducible.  It is possible, however, to save a specific integration within tDAR to run again on the same or different data sets. Here the [*treecats*](https://github.com/bocinsky/treecats) package parses the [*Archaeological Fauna: US Southwest* ontologies](https://core.tdar.org/collection/16056/archaeological-fauna-us-southwest?selectedResourceTypes=ONTOLOGY&startRecord=0) and allows for on-the-fly ontological filtering and collapsing.
 
-Using [*treecats*](https://github.com/bocinsky/treecats), we collapsed all species in the taxonomic order Artiodactyla, all the species in the taxonomic order Lagomorpha, and included any avian remains categorized as "large aves" in *Meleagris gallopavo*. Our goal was to conform to established precedent in southwestern archaeology, while using sufficiently broad taxonomic classes so as to account for analyst error. Although it is somewhat common in the US Southwest to include "large mammal" in analyses involving artiodactyl fauna, we did not include large mammal counts in this analysis because some datasets in our analysis only included identified fauna and not elements from this more general category. Thus the results of our calculations would have been incommensurate across sites if large mammal counts were included.
+Using [*treecats*](https://github.com/bocinsky/treecats), we collapsed all species in the taxonomic order Artiodactyla, all the species in the taxonomic order Lagomorpha, and included any avian remains categorized as "large aves" in *Meleagris gallopavo*. Our goal was to conform to established precedent in southwestern archaeology, while using sufficiently broad taxonomic classes so as to account for analyst error. Although it is somewhat common in the US Southwest to include "large mammal" in analyses involving artiodactyl fauna, we did not include large mammal counts in this analysis because some datasets in our analysis only included identified fauna and not elements from this more general category. Thus the results of our calculations would have been incommensurate across sites if large mammal counts were included. For the bone survivorship analysis, we also collapsed the proximal/distal portion data into "Proximal", "Distal", or "Complete". 
 
 ```{r collapse-taxa}
+integration.data %<>%
+  dplyr::mutate(`Proximal/distal` = `Proximal/distal` %>%
+                  treecats::tct_collapse("Proximal") %>%
+                  treecats::tct_collapse("Distal") %>%
+                  treecats::tct_collapse("Shaft") %>%
+                  treecats::tct_drop()
+  )
+
+```
+
+```{r collapse-portion}
 integration.data %<>%
   dplyr::mutate(Taxon = Taxon %>%
                   treecats::tct_collapse("Artiodactyla") %>%
@@ -431,9 +442,7 @@ integration.data %<>%
 
 ### Data summary
 
-Table \@ref(tab:data-overview) summarizes the data sets, including the counts of samples with valid measurements across each variable reviewed in the Southwest Taphonomic Protocol.
-
-```{r data-overview, results='asis'}
+```{r data-overview-calc, results='asis'}
 data_overview <- integration.data %>%
   dplyr::group_by(Dataset,
                   `tDAR ID`) %>%
@@ -449,6 +458,11 @@ data_overview <- integration.data %>%
     `Weathering` = sum(!(`Weathering` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T)
   )
 
+```
+
+Table \@ref(tab:data-overview) summarizes the data sets, including the counts of samples with valid measurements across each variable reviewed in the Southwest Taphonomic Protocol. Our final dataset includes a total NISP of `r sum(data_overview[["Total NISP"]])` across all taxa, including `r sum(data_overview[["Art. NISP"]])` artiodactyl specimens, `r sum(data_overview[["Lag. NISP"]])` lagomorph specimens, and `r sum(data_overview[["Meg. NISP"]])` turkey or large bird specimens.
+
+```{r data-overview, results='asis'}
 cat('<table style="width:100%">',
     paste0("<caption>", "(#tab:data-overview)", "Summary of datasets and variables included in this analysis.", "</caption>"),
     "</table>", 
@@ -1056,7 +1070,7 @@ art_phalanxes %>%
 
 ### Bone survivorship and mineral density {#survivorship-main -}
 Artiodactyl bone survivorship and bone mineral density
-: A number of taphonomic studies have shown that bone mineral density may be an important factor in skeletal element representation [e.g., @Binford1981; @Kreutzer1992; @Lyman1984; -@Lyman1994; -@Lyman1992]. This research indicates that certain parts of a skeleton are consistently better preserved in archaeological assemblages due to their high structural density [@Lyman1994, pp. 234--258]. To determine if elemental representation within any of the faunal assemblages included in this study had been affected by differential density-mediated attrition, NISP values for 16 different artiodactyl element bone parts---femur (distal/proximal), humerus (distal/proximal), radius (distal/proximal), tibia (distal/proximal), ulna (distal/proximal), pelvis, astragalus, atlas, calcaneus, mandible, and scapula---were compared with bone structural density data [@Lyman1984;-@Lyman1994]. The strength of the relationship between element abundance and bone density was assessed using Spearman’s rank correlation coefficient.
+: A number of taphonomic studies have shown that bone mineral density may be an important factor in skeletal element representation [e.g., @Binford1981; @Kreutzer1992; @Lyman1984; -@Lyman1994; -@Lyman1992]. This research indicates that certain parts of a skeleton are consistently better preserved in archaeological assemblages due to their high structural density [@Lyman1994, pp. 234--258]. To determine if elemental representation within any of the faunal assemblages included in this study had been affected by differential density-mediated attrition, NISP values for 16 different artiodactyl element bone parts---femur (distal/proximal), humerus (distal/proximal), radius (distal/proximal), tibia (distal/proximal), ulna (distal/proximal), pelvis, astragalus, atlas, calcaneus, mandible, and scapula---were compared with bone structural density data for [*Odocoileus spp.* [@Lyman1984, Table 6, value $VD$; -@Lyman1994]](https://github.com/bocinsky/swtp/raw/master/paper/data/raw_data/Artiodactyl_density.csv). The strength of the relationship between element abundance and bone density was assessed using Spearman’s rank correlation coefficient.
 
 ```{r art-survivorship}
 art_elements <-
@@ -1158,8 +1172,10 @@ art_survivorship <- art_elements %>%
                                                               ordered = TRUE)),
                    by = c("Element", 
                           "Proximal/distal")) %>%
+    dplyr::filter(!is.na(Density)) %>%
   dplyr::group_by(Dataset) %>%
-  dplyr::summarize(`Spearman's rho` = cor.test(n, 
+  dplyr::summarize(`sample size` = sum(n, na.rm = TRUE),
+                   `Spearman's rho` = cor.test(n, 
                                                Density,
                                                method = "spearman",
                                                continuity = TRUE,
@@ -1178,8 +1194,8 @@ art_survivorship <- art_elements %>%
                                               method = "spearman",
                                               plot = FALSE,
                                               overlap = TRUE,
-                                              n.iter = 999)$ci[["up.e"]])
-
+                                              n.iter = 999)$ci[["up.e"]]) %>%
+  dplyr::filter(`sample size` >= 0)
 
 cat('<table style="width:100%">',
     paste0("<caption>", "(#tab:art-survivorship)", "Artiodactyl bone survivorship data.", "</caption>"),
@@ -1430,7 +1446,7 @@ tax_plotter(tax_complete)
 
 ### Bone survivorship {}
 Bone survivorship and bone mineral density of artiodactyls, lagomorphs, and turkeys
-: This variable compares the relationship between bone survivorship and bone mineral density among taxonomic subgroups in order to assess the differential effects of density-mediated attrition on artiodactyl, lagomorph, and turkey remains. To determine if certain subgroups were differentially affected by this bias, NISP values for a number of bone element parts were calculated for artiodactyl, lagomorph, and turkey. The abundance of these elements was then compared with bone structural density data from *Odocoileus spp.* [@Lyman1984; -@Lyman1994], leporid [@Pavao1999], and *Meleagris gallopavo* [@Dirrigl2001, Table 1 (*BMDa*)], respectively. The strength of the relationship between element abundance and bone density for each subgroup was assessed using Spearman’s rank correlation coefficient.
+: This variable compares the relationship between bone survivorship and bone mineral density among taxonomic subgroups in order to assess the differential effects of density-mediated attrition on artiodactyl, lagomorph, and turkey remains. To determine if certain subgroups were differentially affected by this bias, NISP values for a number of bone element parts were calculated for artiodactyl, lagomorph, and turkey. The abundance of these elements was then compared with bone structural density data from [*Odocoileus spp.* [@Lyman1984, Table 6, value $VD$; -@Lyman1994]](https://github.com/bocinsky/swtp/raw/master/paper/data/raw_data/Artiodactyl_density.csv), [leporid [@Pavao1999, Table 1, value $VD_{LD/BT}$]](https://github.com/bocinsky/swtp/raw/master/paper/data/raw_data/Lagomorph_density.csv), and [*Meleagris gallopavo* [@Dirrigl2001, Table 1, value $BMDa$)]](https://github.com/bocinsky/swtp/raw/master/paper/data/raw_data/Meleagris_density.csv), respectively. The strength of the relationship between element abundance and bone density for each subgroup was assessed using Spearman’s rank correlation coefficient.
 
 ```{r tax-survivorship}
 lag_elements <-
@@ -1534,8 +1550,10 @@ lag_survivorship <- lag_elements %>%
                                                               ordered = TRUE)),
                    by = c("Element", 
                           "Proximal/distal")) %>%
+    dplyr::filter(!is.na(Density)) %>%
   dplyr::group_by(Dataset) %>%
-  dplyr::summarize(`Spearman's rho` = cor.test(n, 
+  dplyr::summarize(`sample size` = sum(n, na.rm = TRUE),
+                   `Spearman's rho` = cor.test(n, 
                                                Density,
                                                method = "spearman",
                                                continuity = TRUE,
@@ -1555,7 +1573,8 @@ lag_survivorship <- lag_elements %>%
                                               plot = FALSE,
                                               overlap = TRUE,
                                               n.iter = 999)$ci[["up.e"]]) %>%
-  dplyr::mutate(Taxon = "Lagomorpha")
+  dplyr::mutate(Taxon = "Lagomorpha") %>%
+  dplyr::filter(`sample size` >= 0)
 
 
 ## Meleagris
@@ -1567,14 +1586,18 @@ meg_elements <-
                 `Proximal/distal`) %>%
   dplyr::mutate(Element = as.character(Element))
 
-meg_elements %<>%
-  dplyr::filter(Element %in% c("Carpometacarpus",
+meg_included_elements <- c("Carpometacarpus",
                                "Scapula",
                                "Humerus",
                                "Ulna",
                                "Tarsometatarsus",
                                "Femur",
-                               "Tibiotarsus"),
+                               "Tibiotarsus",
+                               "Radius",
+                               "Coracoid")
+
+meg_elements %<>%
+  dplyr::filter(Element %in% meg_included_elements,
                 `Proximal/distal` == "Complete"
   ) %>%
   dplyr::mutate(`Proximal/distal` = "Proximal",
@@ -1582,13 +1605,7 @@ meg_elements %<>%
                                            levels = levels(meg_elements$`Proximal/distal`),
                                            ordered = TRUE)) %>%
   dplyr::bind_rows(meg_elements %<>%
-                     dplyr::filter(Element %in% c("Carpometacarpus",
-                                                  "Scapula",
-                                                  "Humerus",
-                                                  "Ulna",
-                                                  "Tarsometatarsus",
-                                                  "Femur",
-                                                  "Tibiotarsus"),
+                     dplyr::filter(Element %in% meg_included_elements,
                                    `Proximal/distal` == "Complete"
                      ) %>%
                      dplyr::mutate(`Proximal/distal` = "Distal",
@@ -1596,13 +1613,7 @@ meg_elements %<>%
                                                               levels = levels(meg_elements$`Proximal/distal`),
                                                               ordered = TRUE))) %>%
   dplyr::bind_rows(meg_elements %<>%
-                     dplyr::filter(Element %in% c("Carpometacarpus",
-                                                  "Scapula",
-                                                  "Humerus",
-                                                  "Ulna",
-                                                  "Tarsometatarsus",
-                                                  "Femur",
-                                                  "Tibiotarsus"),
+                     dplyr::filter(Element %in% meg_included_elements,
                                    `Proximal/distal` %in% c("Proximal","Distal")
                      ) %>%
                      dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
@@ -1611,13 +1622,7 @@ meg_elements %<>%
   dplyr::group_by_all() %>%
   dplyr::count() %>%
   dplyr::right_join(expand.grid(Dataset = integration.data$Dataset %>% unique(),
-                                Element = c("Carpometacarpus",
-                                            "Scapula",
-                                            "Humerus",
-                                            "Ulna",
-                                            "Tarsometatarsus",
-                                            "Femur",
-                                            "Tibiotarsus"),
+                                Element = meg_included_elements,
                                 `Proximal/distal` = c("Proximal","Distal"),
                                 stringsAsFactors = FALSE) %>%
                       tibble::as_tibble() %>%
@@ -1635,12 +1640,16 @@ meg_survivorship <- meg_elements %>%
                                      Element = readr::col_character(),
                                      `Proximal/distal` = readr::col_character(),
                                      Density = readr::col_double()
-                                   )),
+                                   )) %>%
+                     dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
+                                                              levels = levels(meg_elements$`Proximal/distal`),
+                                                              ordered = TRUE)),
                    by = c("Element", 
                           "Proximal/distal")) %>%
-  dplyr::arrange(Dataset, Element, `Proximal/distal`) %>%
+  dplyr::filter(!is.na(Density)) %>%
   dplyr::group_by(Dataset) %>%
-  dplyr::summarize(`Spearman's rho` = cor.test(n, 
+  dplyr::summarize(`sample size` = sum(n, na.rm = TRUE),
+                   `Spearman's rho` = cor.test(n, 
                                                Density,
                                                method = "spearman",
                                                continuity = TRUE,
@@ -1660,7 +1669,8 @@ meg_survivorship <- meg_elements %>%
                                               plot = FALSE,
                                               overlap = TRUE,
                                               n.iter = 999)$ci[["up.e"]]) %>%
-  dplyr::mutate(Taxon = "Meleagris gallopavo")
+  dplyr::mutate(Taxon = "Meleagris gallopavo") %>%
+  dplyr::filter(`sample size` >= 0)
 
 cat('<table style="width:100%">',
     paste0("<caption>", "(#tab:tax-complete)", "Intertaxonomic comparison of bone survivorship data.", "</caption>"),
