@@ -1085,6 +1085,12 @@ art_elements$Element[art_elements$Element %in%
                        (integration.data$Element %>% 
                           treecats::tct_get_descendents("Pelvic Girdle"))] <- "Pelvis"
 
+# integration.data %>%
+#   dplyr::filter(Dataset == "Pueblo Blanco") %>%
+#   dplyr::group_by(Taxon) %>%
+#   dplyr::summarise(n= n())
+#   as.data.frame()
+
 art_elements %<>%
   dplyr::filter(Element %in% c("Femur",
                                "Humerus",
