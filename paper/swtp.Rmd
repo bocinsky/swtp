@@ -1088,7 +1088,7 @@ art_elements$Element[art_elements$Element %in%
 # integration.data %>%
 #   dplyr::filter(Dataset == "Pueblo Blanco") %>%
 #   dplyr::group_by(Taxon) %>%
-#   dplyr::summarise(n= n())
+#   dplyr::summarise(n = n())
 #   as.data.frame()
 
 art_elements %<>%
@@ -1201,7 +1201,7 @@ art_survivorship <- art_elements %>%
                                               plot = FALSE,
                                               overlap = TRUE,
                                               n.iter = 999)$ci[["up.e"]]) %>%
-  dplyr::filter(`sample size` > 0)
+  dplyr::filter(`sample size` >= 25)
 
 cat('<table style="width:100%">',
     paste0("<caption>", "(#tab:art-survivorship)", "Artiodactyl bone survivorship data.", "</caption>"),
@@ -1580,7 +1580,7 @@ lag_survivorship <- lag_elements %>%
                                               overlap = TRUE,
                                               n.iter = 999)$ci[["up.e"]]) %>%
   dplyr::mutate(Taxon = "Lagomorpha") %>%
-  dplyr::filter(`sample size` > 0)
+dplyr::filter(`sample size` >= 25)
 
 
 ## Meleagris
@@ -1676,7 +1676,7 @@ meg_survivorship <- meg_elements %>%
                                               overlap = TRUE,
                                               n.iter = 999)$ci[["up.e"]]) %>%
   dplyr::mutate(Taxon = "Meleagris gallopavo") %>%
-  dplyr::filter(`sample size` > 0)
+dplyr::filter(`sample size` >= 25)
 
 cat('<table style="width:100%">',
     paste0("<caption>", "(#tab:tax-complete)", "Intertaxonomic comparison of bone survivorship data.", "</caption>"),
