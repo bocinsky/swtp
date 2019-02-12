@@ -10,9 +10,9 @@ jobs:
           command: |
               R -e 'devtools::install(".", dependencies = TRUE, upgrade_dependencies = FALSE)'
       - run:
-          name: Check and test
+          name: Render paper
           command: |
-              R -e "rmarkdown::render('vignettes/swtp.Rmd')"
+              R -e "rmarkdown::render('./paper/swtp.Rmd', output_file = "../docs/index.html")"
 
 workflows:
   version: 2

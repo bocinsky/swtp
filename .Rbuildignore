@@ -1,3 +1,6 @@
+^Meta$
+^doc$
+^paper$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^README\.Rmd$
