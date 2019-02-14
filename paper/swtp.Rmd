@@ -456,7 +456,7 @@ data_overview <- integration.data %>%
 
 ```
 
-Table \@ref(tab:data-overview) summarizes the data sets, including the counts of samples with valid measurements across each variable reviewed in the Southwest Taphonomic Protocol. Our final dataset includes a total NISP of `r sum(data_overview[["Total NISP"]])` across all taxa, including `r sum(data_overview[["Art. NISP"]])` artiodactyl specimens, `r sum(data_overview[["Lag. NISP"]])` lagomorph specimens, and `r sum(data_overview[["Meg. NISP"]])` turkey or large bird specimens.
+Table \@ref(tab:data-overview) summarizes the data sets, including the counts of samples with valid measurements across each variable reviewed in the Southwest Taphonomic Protocol. Our final dataset includes a total NISP of `r format(sum(data_overview[["Total NISP"]]), big.mark = ",")` across all taxa, including `r format(sum(data_overview[["Art. NISP"]]), big.mark = ",")` artiodactyl specimens, `r format(sum(data_overview[["Lag. NISP"]]), big.mark = ",")` lagomorph specimens, and `r format(sum(data_overview[["Meg. NISP"]]), big.mark = ",")` turkey or large bird specimens.
 
 ```{r data-overview, results='asis'}
 cat('<table style="width:100%">',
@@ -1457,6 +1457,13 @@ lag_elements$Element[lag_elements$Element %in%
                        (integration.data$Element %>% 
                           treecats::tct_get_descendents("Pelvic Girdle"))] <- "Pelvis"
 
+
+# integration.data %>%
+#   # dplyr::filter(Dataset == "Kite Pueblo (LA 199)") %>%
+#   dplyr::group_by(Dataset,`Proximal/distal`) %>%
+#   dplyr::summarise(n = n()) %>%
+#   tidyr::spread(`Proximal/distal`,n) %>%
+#   readr::write_csv("~/Desktop/proximal_distal_counts.csv")
 
 lag_elements %<>%
   dplyr::filter(Element %in% c("Femur",
