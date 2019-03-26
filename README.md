@@ -16,7 +16,7 @@ Please cite this compendium as:
 
 > Bocinsky, R. Kyle, Tiffany Clark, and Katherine A. Spielmann, (2019).
 > *Compendium of R code and data for ‘The Southwestern Taphonomic
-> Protocol’*. Accessed 09 Feb 2019.
+> Protocol’*. Accessed 25 Mar 2019.
 
 ### How to download or install
 
@@ -25,6 +25,14 @@ You can install this compendium as an R package, swtp, from GitHub with:
 ``` r
 # install.packages("remotes")
 remotes::install_github("bocinsky/swtp")
+```
+
+### Building the report
+
+``` r
+rmarkdown::render("./paper/swtp.Rmd", 
+                  output_file = "index.html", 
+                  output_dir = "./docs")
 ```
 
 ### Licenses

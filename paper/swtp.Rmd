@@ -50,7 +50,8 @@ var_summary <- function(x, var){
     tidyr::spread(!!quo_var,
                   n,
                   drop = FALSE) %>%
-    dplyr::mutate_all(.funs = function(x){
+    dplyr::mutate_at(.vars = dplyr::vars(-dplyr::group_cols()),
+                      .funs = function(x){
       ifelse(is.na(x), 0, x)
     }) %>%
     dplyr::ungroup()
@@ -238,7 +239,7 @@ To visually compare the distribution of taphonomic data by variable, the proport
 # Analysis and Discussion
 
 ```{r get-tdar-integration, results='hide'}
-integration_xlsx <- "./data/raw_data/tdar-integration-SWTP.xlsx"
+integration_xlsx <- "./data/raw_data/tdar-integration-SWTP_20190228.xlsx"
 
 tdar::tdar_login()
 
@@ -258,7 +259,7 @@ integration.data <-
                 count = dplyr::if_else(is.na(count) | count == ".", "1.0", count),
                 count = as.integer(count)) %>%
   # Repeat rows with more than observation per record
-  dplyr::slice(rep(1:n(),times = count)) %>%
+  dplyr::slice(rep(1:dplyr::n(),times = count)) %>%
   # Remove count column (it is no longer meaningful)
   dplyr::select(-`count`,
                 -`count column`) %>%
@@ -277,8 +278,10 @@ for(variable in names(integration.data)){
     as.integer()
   
   integration.data[[variable]] <- 
-    treecats::tct_tree(integration.data[[variable]],
-                       tct_levels = tdar::tdar_get_ontology(ontology)) %>%
+    integration.data[[variable]] %>%
+    # treecats::tct_tree(integration.data[[variable]],
+    #                    tct_levels = tdar::tdar_get_ontology(ontology)) %>%
+    factor(ordered = TRUE) %>%
     forcats::fct_expand("Not Recorded",
                         "MISSING",
                         "UNMAPPED",
@@ -287,13 +290,21 @@ for(variable in names(integration.data)){
                          "MISSING",
                          "UNMAPPED",
                          "NULL",
-                         after = Inf)
+                         after = Inf) %>%
+    treecats::tct_tree(tct_levels = tdar::tdar_get_ontology(ontology))
+  # 
+  # class(integration.data[[variable]]) <- c("tct_tree",
+  #                                          "ordered",
+  #                                          "factor")
 }
 
 tdar::tdar_logout()
 ```
 
 ```{r process-tdar-integration}
+# 
+# class(integration.data$`mapped-Fauna Proximal-Distal/Portion(3035)`)
+# attributes(sort(integration.data$`mapped-Fauna Proximal-Distal/Portion(3035)`))
 
 names(integration.data) <- names(integration.data) %>%
   stringr::str_remove_all("mapped-") %>%
@@ -304,7 +315,7 @@ integration.data %<>%
   dplyr::rename(Dataset = `Dataset/Table Name`,
                 Taxon = `Fauna Taxon - Southwest US`,
                 Element = `Fauna Element`,
-                `Proximal/distal` = `Fauna Proximal-Distal/Portion`,
+                Portion = `Fauna Proximal-Distal/Portion`,
                 Weathering = `Fauna Weathering`,
                 `Burning` = `Fauna Burning Intensity`,
                 Gnawing = `Fauna Gnawing`,
@@ -334,7 +345,8 @@ datasets <- integration_xlsx %>%
 # OPTIONAL: Rename datasets
 integration.data %<>%
   dplyr::mutate(`Dataset (Long)` = Dataset,
-                Dataset = forcats::fct_relabel(`Dataset (Long)`, ~ stringr::str_remove(.x, " Fauna - .*"))) %>%
+                Dataset = forcats::fct_relabel(`Dataset (Long)`, 
+                                               ~ stringr::str_remove(.x, " Fauna - .*"))) %>%
   dplyr::left_join(datasets,
                    by = "Dataset (Long)")
 
@@ -345,22 +357,27 @@ integration.data %<>%
                 `tDAR ID`,
                 Taxon,
                 Element,
-                `Proximal/distal`,
+                Portion,
                 Weight,
                 Burning,
                 Butchering,
                 Completeness,
                 Gnawing,
-                Weathering)
+                Weathering) %>%
+  dplyr::arrange(Dataset,
+                 Taxon,
+                 Element,
+                 Portion)
+# 
+# class(integration.data$Portion)
+# attributes(sort(integration.data$Portion))
 
 ```
 
 ```{r write-tdar-integration, cache=FALSE}
 
-integration.data %T>%
-  readr::write_csv("./data/derived_data/tdar-integration-SWTP_final.csv") %>%
-  readr::write_rds("./data/derived_data/tdar-integration-SWTP_final.Rds", 
-                   compress = "bz")
+integration.data %>%
+  writexl::write_xlsx("./data/derived_data/tdar-integration-SWTP_final.xlsx")
 
 ```
 
@@ -409,11 +426,10 @@ Using [*treecats*](https://github.com/bocinsky/treecats), we collapsed all speci
 
 ```{r collapse-taxa}
 integration.data %<>%
-  dplyr::mutate(`Proximal/distal` = `Proximal/distal` %>%
+  dplyr::mutate(Portion = Portion %>%
                   treecats::tct_collapse("Proximal") %>%
                   treecats::tct_collapse("Distal") %>%
-                  treecats::tct_collapse("Shaft") %>%
-                  treecats::tct_drop()
+                  treecats::tct_collapse("Shaft")
   )
 
 ```
@@ -434,6 +450,16 @@ integration.data %<>%
                   treecats::tct_collapse("Butchered")
   )
 
+# integration.data %>%
+#   dplyr::select(Dataset,Portion) %>%
+#   dplyr::group_by(Dataset,Portion) %>%
+#   dplyr::summarise(n = n()) %>%
+#   tidyr::spread(Portion,n) %>%
+#   readr::write_csv("~/Desktop/proximal_distal_counts.csv")
+
+integration.data %>%
+  writexl::write_xlsx("./data/derived_data/tdar-integration-SWTP_final_collapsed.xlsx")
+
 ```
 
 ### Data summary
@@ -443,7 +469,7 @@ data_overview <- integration.data %>%
   dplyr::group_by(Dataset,
                   `tDAR ID`) %>%
   dplyr::summarise(
-    `Total NISP` = n(),
+    `Total NISP` = dplyr::n(),
     `Art. NISP` = sum(Taxon %in% c("Artiodactyla"), na.rm = T),
     `Lag. NISP` = sum(Taxon %in% c("Lagomorpha"), na.rm = T),
     `Meg. NISP` = sum(Taxon %in% c("Meleagris gallopavo"), na.rm = T),
@@ -469,11 +495,11 @@ tabler(data_overview, "SWTP_Overview")
 ```
 
 #### Thresholds for dataset inclusion
-In the initial stages of developing this executable paper we found that there were assemblages in which relevant variables were present, but rarely used, or where sample sizes were far too small to result in meaningful information. Particularly in the case of the rare use of a variable, calculations of proportions and confidence intervals resulted in potentially spurious output. We thus established thresholds for inclusion of variables in the taphonomic protocol that would preclude their calculation where results would be misleading. The threshold for inclusion of artiodactyls, lagomorphs, or turkey elements in the analysis of a variable was set at an NISP of 25 for the taxon. Additionally, 40 percent of the taxon assemblage had to have been coded for that variable. Thus, the minimum NISP used in the calculation of the proportion of a taxon assemblage affected by a particular taphonomic variable is ten (40% of 25). When assessing assemblage completeness, we only included datasets with a minimum of 5 NISP for the element under consideration (astragali and 3rd phalanxes). Our bone surviorship analysis includes all datasets.
+In the initial stages of developing this executable paper we found that there were assemblages in which relevant variables were present, but rarely used, or where sample sizes were far too small to result in meaningful information. Particularly in the case of the rare use of a variable, calculations of proportions and confidence intervals resulted in potentially spurious output. We thus established thresholds for inclusion of variables in the taphonomic protocol that would preclude their calculation where results would be misleading. The threshold for inclusion of artiodactyls, lagomorphs, or turkey elements in the analysis of a variable was set at an NISP of 25 for the taxon. Additionally, 40 percent of the taxon assemblage had to have been coded for that variable. Thus, the minimum NISP used in the calculation of the proportion of a taxon assemblage affected by a particular taphonomic variable is ten (40% of 25). When assessing assemblage completeness, we only included datasets with a minimum of 5 NISP for the element under consideration (astragali and 3rd phalanxes). Our bone surviorship analysis includes all datasets with a minimum of 25 total NISP among the elements under consideration.
 
 Related to thresholds, a number of assemblages used the coding option of "indeterminate." While this meant that the variable was indeed coded for all of the cases, the actual content of that coding did not contribute information to the interpretation of how prevalent the taphonomic condition was in that assemblage. We thus chose to consider those cases uncoded for analyzing taphonomic differences across sites. Therefore sites with more than 60 percent of the cases for each taxon coded as "indeterminate" fell below the minimum of threshold of 40 percent coded and were not included in the calculation of that variable.
 
-Table \@ref(tab:data-inclusion) shows which datasets were included in each analysis for each taxon after thresholding. Table \@ref(tab:data-inclusion-count) provides the number of datasets included in each analysis.
+Table \@ref(tab:data-inclusion) shows which datasets were included in each analysis for each taxon after thresholding. Table \@ref(tab:data-inclusion-count) provides the number of datasets included in each analysis. Note that the assemblage completeness and bone survivorship analyses are not included in these tables.
 
 ```{r data-inclusion, results='asis'}
 
@@ -482,7 +508,7 @@ data_inclusion <- integration.data %>%
   dplyr::group_by(Dataset,
                   Taxon) %>%
   dplyr::summarise(
-    `NISP` = n(),
+    `NISP` = dplyr::n(),
     `Burning` = sum(!(`Burning` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T),
     `Butchering` = sum(!(`Butchering` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T),
     `Gnawing` = sum(!(`Gnawing` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T),
@@ -496,26 +522,26 @@ data_inclusion <- integration.data %>%
                                               TRUE,
                                               FALSE))) %>%
   dplyr::ungroup() %>%
-  dplyr::select(-NISP) %>%
-  dplyr::left_join(integration.data %>%
-                     dplyr::filter(Taxon %in% c("Artiodactyla"),
-                                   Element %in% c("Astragalus")) %>%
-                     dplyr::group_by(Dataset,
-                                     Taxon) %>%
-                     dplyr::summarise(
-                       `Astragal Completeness` = sum(!(`Completeness` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T) >= nisp_element_threshold
-                     )) %>%
-  dplyr::left_join(integration.data %>%
-                     dplyr::filter(Taxon %in% c("Artiodactyla"),
-                                   Element %in% (integration.data$Element %>% treecats::tct_get_descendents("3rd Phalanx"))) %>%
-                     dplyr::group_by(Dataset,
-                                     Taxon) %>%
-                     dplyr::summarise(
-                       `3rd Phalanx Completeness` = sum(!(`Completeness` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T) >= nisp_element_threshold
-                     )) %>%
-  dplyr::mutate(`Astragal Completeness` = ifelse(is.na(`Astragal Completeness`) & Taxon == "Artiodactyla", FALSE, `Astragal Completeness`),
-                `3rd Phalanx Completeness` = ifelse(is.na(`3rd Phalanx Completeness`) & Taxon == "Artiodactyla", FALSE, `3rd Phalanx Completeness`),
-                `Bone Survivorship` = ifelse(Taxon == "Artiodactyla", TRUE, NA))
+  dplyr::select(-NISP)# %>%
+  # dplyr::left_join(integration.data %>%
+  #                    dplyr::filter(Taxon %in% c("Artiodactyla"),
+  #                                  Element %in% c("Astragalus")) %>%
+  #                    dplyr::group_by(Dataset,
+  #                                    Taxon) %>%
+  #                    dplyr::summarise(
+  #                      `Astragal Completeness` = sum(!(`Completeness` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T) >= nisp_element_threshold
+  #                    )) %>%
+  # dplyr::left_join(integration.data %>%
+  #                    dplyr::filter(Taxon %in% c("Artiodactyla"),
+  #                                  Element %in% (integration.data$Element %>% treecats::tct_get_descendents("3rd Phalanx"))) %>%
+  #                    dplyr::group_by(Dataset,
+  #                                    Taxon) %>%
+  #                    dplyr::summarise(
+  #                      `3rd Phalanx Completeness` = sum(!(`Completeness` %in% c("Not Recorded","NULL","MISSING","UNMAPPED","Indeterminate")), na.rm = T) >= nisp_element_threshold
+  #                    )) %>%
+  # dplyr::mutate(`Astragal Completeness` = ifelse(is.na(`Astragal Completeness`) & Taxon == "Artiodactyla", FALSE, `Astragal Completeness`),
+  #               `3rd Phalanx Completeness` = ifelse(is.na(`3rd Phalanx Completeness`) & Taxon == "Artiodactyla", FALSE, `3rd Phalanx Completeness`),
+  #               `Bone Survivorship` = ifelse(Taxon == "Artiodactyla", TRUE, NA))
 
 cat('<table style="width:100%">',
     paste0("<caption>", "(#tab:data-inclusion)", "Datasets and variables included in this analysis after thresholding.", "</caption>"),
@@ -556,6 +582,9 @@ data_inclusion_count %>%
                   # fixedColumns = list(leftColumns = 1),
                   pageLength = 10),
                 rownames = TRUE)
+
+integration.data %>%
+  writexl::write_xlsx("./data/derived_data/tdar-integration-SWTP_final_threshold.xlsx")
 
 ```
 
@@ -894,7 +923,7 @@ bone_weight <- function(taxon){
     dplyr::filter(Taxon %in% taxon) %>%
     dplyr::group_by(Dataset) %>%
     dplyr::summarise(
-      `n taxon` = n(),
+      `n taxon` = dplyr::n(),
       `n weight recorded` = sum(!is.na(Weight)),
       `Weight (mean)` = mean(Weight, na.rm = T) %>% 
         round(digits = 1),
@@ -1074,7 +1103,7 @@ art_elements <-
   dplyr::filter(Taxon %in% c("Artiodactyla")) %>%
   dplyr::select(Dataset,
                 Element,
-                `Proximal/distal`) %>%
+                Portion) %>%
   dplyr::mutate(Element = as.character(Element))
 
 art_elements$Element[art_elements$Element %in% 
@@ -1087,35 +1116,35 @@ art_elements %<>%
                                "Radius",
                                "Tibia",
                                "Ulna"),
-                `Proximal/distal` == "Complete"
+                Portion == "Complete"
   ) %>%
-  dplyr::mutate(`Proximal/distal` = "Proximal",
-                `Proximal/distal` = factor(`Proximal/distal`, 
-                                           levels = levels(art_elements$`Proximal/distal`),
-                                           ordered = TRUE)) %>%
+  dplyr::mutate(Portion = "Proximal",
+                Portion = factor(Portion, 
+                                 levels = levels(art_elements$Portion),
+                                 ordered = TRUE)) %>%
   dplyr::bind_rows(art_elements %>%
                      dplyr::filter(Element %in% c("Femur",
                                                   "Humerus",
                                                   "Radius",
                                                   "Tibia",
                                                   "Ulna"),
-                                   `Proximal/distal` == "Complete"
+                                   Portion == "Complete"
                      ) %>%
-                     dplyr::mutate(`Proximal/distal` = "Distal",
-                                   `Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(art_elements$`Proximal/distal`),
-                                                              ordered = TRUE))) %>%
+                     dplyr::mutate(Portion = "Distal",
+                                   Portion = factor(Portion, 
+                                                    levels = levels(art_elements$Portion),
+                                                    ordered = TRUE))) %>%
   dplyr::bind_rows(art_elements %>%
                      dplyr::filter(Element %in% c("Femur",
                                                   "Humerus",
                                                   "Radius",
                                                   "Tibia",
                                                   "Ulna"),
-                                   `Proximal/distal` %in% c("Proximal","Distal")
+                                   Portion %in% c("Proximal","Distal")
                      ) %>%
-                     dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(art_elements$`Proximal/distal`),
-                                                              ordered = TRUE))) %>%
+                     dplyr::mutate(Portion = factor(Portion, 
+                                                    levels = levels(art_elements$Portion),
+                                                    ordered = TRUE))) %>%
   dplyr::bind_rows(art_elements %>%
                      dplyr::filter(Element %in% c("Astragalus",
                                                   "Atlas",
@@ -1123,10 +1152,10 @@ art_elements %<>%
                                                   "Mandible",
                                                   "Pelvis",
                                                   "Scapula")) %>%
-                     dplyr::mutate(`Proximal/distal` = NA,
-                                   `Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(art_elements$`Proximal/distal`),
-                                                              ordered = TRUE))) %>%
+                     dplyr::mutate(Portion = NA,
+                                   Portion = factor(Portion, 
+                                                    levels = levels(art_elements$Portion),
+                                                    ordered = TRUE))) %>%
   dplyr::group_by_all() %>%
   dplyr::count() %>%
   dplyr::right_join(expand.grid(Dataset = integration.data$Dataset %>% 
@@ -1136,12 +1165,12 @@ art_elements %<>%
                                             "Radius",
                                             "Tibia",
                                             "Ulna"),
-                                `Proximal/distal` = c("Proximal","Distal"),
+                                Portion = c("Proximal","Distal"),
                                 stringsAsFactors = FALSE) %>%
                       tibble::as_tibble() %>%
-                      dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
-                                                               levels = levels(art_elements$`Proximal/distal`),
-                                                               ordered = TRUE)) %>%
+                      dplyr::mutate(Portion = factor(Portion, 
+                                                     levels = levels(art_elements$Portion),
+                                                     ordered = TRUE)) %>%
                       dplyr::bind_rows(expand.grid(Dataset = integration.data$Dataset %>% 
                                                      unique(),
                                                    Element = c("Astragalus",
@@ -1153,21 +1182,21 @@ art_elements %<>%
                                                    stringsAsFactors = FALSE)),
                     by = c("Dataset", 
                            "Element", 
-                           "Proximal/distal")) %>%
+                           "Portion")) %>%
   dplyr::mutate(n = ifelse(is.na(n),0,n))
 
 art_survivorship <- art_elements %>%
   dplyr::left_join(readr::read_csv("./data/raw_data/Artiodactyl_density.csv",
                                    col_types = readr::cols(
                                      Element = readr::col_character(),
-                                     `Proximal/distal` = readr::col_character(),
+                                     Portion = readr::col_character(),
                                      Density = readr::col_double()
                                    )) %>%
-                     dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(art_elements$`Proximal/distal`),
-                                                              ordered = TRUE)),
+                     dplyr::mutate(Portion = factor(Portion, 
+                                                    levels = levels(art_elements$Portion),
+                                                    ordered = TRUE)),
                    by = c("Element", 
-                          "Proximal/distal")) %>%
+                          "Portion")) %>%
   dplyr::filter(!is.na(Density)) %>%
   dplyr::group_by(Dataset) %>%
   dplyr::summarize(`sample size` = sum(n, na.rm = TRUE),
@@ -1450,7 +1479,7 @@ lag_elements <-
   dplyr::filter(Taxon %in% c("Lagomorpha")) %>%
   dplyr::select(Dataset,
                 Element,
-                `Proximal/distal`) %>%
+                Portion) %>%
   dplyr::mutate(Element = as.character(Element))
 
 lag_elements$Element[lag_elements$Element %in% 
@@ -1460,9 +1489,9 @@ lag_elements$Element[lag_elements$Element %in%
 
 # integration.data %>%
 #   # dplyr::filter(Dataset == "Kite Pueblo (LA 199)") %>%
-#   dplyr::group_by(Dataset,`Proximal/distal`) %>%
-#   dplyr::summarise(n = n()) %>%
-#   tidyr::spread(`Proximal/distal`,n) %>%
+#   dplyr::group_by(Dataset,Portion) %>%
+#   dplyr::summarise(n = dplyr::n()) %>%
+#   tidyr::spread(Portion,n) %>%
 #   readr::write_csv("~/Desktop/proximal_distal_counts.csv")
 
 lag_elements %<>%
@@ -1471,35 +1500,35 @@ lag_elements %<>%
                                "Radius",
                                "Tibia",
                                "Ulna"),
-                `Proximal/distal` == "Complete"
+                Portion == "Complete"
   ) %>%
-  dplyr::mutate(`Proximal/distal` = "Proximal",
-                `Proximal/distal` = factor(`Proximal/distal`, 
-                                           levels = levels(lag_elements$`Proximal/distal`),
-                                           ordered = TRUE)) %>%
+  dplyr::mutate(Portion = "Proximal",
+                Portion = factor(Portion, 
+                                 levels = levels(lag_elements$Portion),
+                                 ordered = TRUE)) %>%
   dplyr::bind_rows(lag_elements %>%
                      dplyr::filter(Element %in% c("Femur",
                                                   "Humerus",
                                                   "Radius",
                                                   "Tibia",
                                                   "Ulna"),
-                                   `Proximal/distal` == "Complete"
+                                   Portion == "Complete"
                      ) %>%
-                     dplyr::mutate(`Proximal/distal` = "Distal",
-                                   `Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(lag_elements$`Proximal/distal`),
-                                                              ordered = TRUE))) %>%
+                     dplyr::mutate(Portion = "Distal",
+                                   Portion = factor(Portion, 
+                                                    levels = levels(lag_elements$Portion),
+                                                    ordered = TRUE))) %>%
   dplyr::bind_rows(lag_elements %>%
                      dplyr::filter(Element %in% c("Femur",
                                                   "Humerus",
                                                   "Radius",
                                                   "Tibia",
                                                   "Ulna"),
-                                   `Proximal/distal` %in% c("Proximal","Distal")
+                                   Portion %in% c("Proximal","Distal")
                      ) %>%
-                     dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(lag_elements$`Proximal/distal`),
-                                                              ordered = TRUE))) %>%
+                     dplyr::mutate(Portion = factor(Portion, 
+                                                    levels = levels(lag_elements$Portion),
+                                                    ordered = TRUE))) %>%
   dplyr::bind_rows(lag_elements %>%
                      dplyr::filter(Element %in% c("Astragalus",
                                                   "Atlas",
@@ -1507,10 +1536,10 @@ lag_elements %<>%
                                                   "Mandible",
                                                   "Pelvis",
                                                   "Scapula")) %>%
-                     dplyr::mutate(`Proximal/distal` = NA,
-                                   `Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(lag_elements$`Proximal/distal`),
-                                                              ordered = TRUE))) %>%
+                     dplyr::mutate(Portion = NA,
+                                   Portion = factor(Portion, 
+                                                    levels = levels(lag_elements$Portion),
+                                                    ordered = TRUE))) %>%
   dplyr::group_by_all() %>%
   dplyr::count() %>%
   dplyr::right_join(
@@ -1520,7 +1549,7 @@ lag_elements %<>%
                             "Radius",
                             "Tibia",
                             "Ulna"),
-                `Proximal/distal` = c("Proximal","Distal"),
+                Portion = c("Proximal","Distal"),
                 stringsAsFactors = FALSE) %>%
       tibble::as_tibble() %>%
       dplyr::bind_rows(expand.grid(Dataset = integration.data$Dataset %>% 
@@ -1532,12 +1561,12 @@ lag_elements %<>%
                                                "Pelvis",
                                                "Scapula"),
                                    stringsAsFactors = FALSE)) %>%
-      dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
-                                               levels = levels(lag_elements$`Proximal/distal`),
-                                               ordered = TRUE)),
+      dplyr::mutate(Portion = factor(Portion, 
+                                     levels = levels(lag_elements$Portion),
+                                     ordered = TRUE)),
     by = c("Dataset", 
            "Element", 
-           "Proximal/distal")
+           "Portion")
   ) %>%
   dplyr::mutate(n = ifelse(is.na(n),0,n))
 
@@ -1545,14 +1574,14 @@ lag_survivorship <- lag_elements %>%
   dplyr::left_join(readr::read_csv("./data/raw_data/Lagomorph_density.csv",
                                    col_types = readr::cols(
                                      Element = readr::col_character(),
-                                     `Proximal/distal` = readr::col_character(),
+                                     Portion = readr::col_character(),
                                      Density = readr::col_double()
                                    )) %>%
-                     dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(lag_elements$`Proximal/distal`),
-                                                              ordered = TRUE)),
+                     dplyr::mutate(Portion = factor(Portion, 
+                                                    levels = levels(lag_elements$Portion),
+                                                    ordered = TRUE)),
                    by = c("Element", 
-                          "Proximal/distal")) %>%
+                          "Portion")) %>%
   dplyr::filter(!is.na(Density)) %>%
   dplyr::group_by(Dataset) %>%
   dplyr::summarize(`sample size` = sum(n, na.rm = TRUE),
@@ -1586,7 +1615,7 @@ meg_elements <-
   dplyr::filter(Taxon %in% c("Meleagris gallopavo")) %>%
   dplyr::select(Dataset,
                 Element,
-                `Proximal/distal`) %>%
+                Portion) %>%
   dplyr::mutate(Element = as.character(Element))
 
 meg_included_elements <- c("Carpometacarpus",
@@ -1601,54 +1630,54 @@ meg_included_elements <- c("Carpometacarpus",
 
 meg_elements %<>%
   dplyr::filter(Element %in% meg_included_elements,
-                `Proximal/distal` == "Complete"
+                Portion == "Complete"
   ) %>%
-  dplyr::mutate(`Proximal/distal` = "Proximal",
-                `Proximal/distal` = factor(`Proximal/distal`, 
-                                           levels = levels(meg_elements$`Proximal/distal`),
-                                           ordered = TRUE)) %>%
+  dplyr::mutate(Portion = "Proximal",
+                Portion = factor(Portion, 
+                                 levels = levels(meg_elements$Portion),
+                                 ordered = TRUE)) %>%
   dplyr::bind_rows(meg_elements %<>%
                      dplyr::filter(Element %in% meg_included_elements,
-                                   `Proximal/distal` == "Complete"
+                                   Portion == "Complete"
                      ) %>%
-                     dplyr::mutate(`Proximal/distal` = "Distal",
-                                   `Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(meg_elements$`Proximal/distal`),
-                                                              ordered = TRUE))) %>%
+                     dplyr::mutate(Portion = "Distal",
+                                   Portion = factor(Portion, 
+                                                    levels = levels(meg_elements$Portion),
+                                                    ordered = TRUE))) %>%
   dplyr::bind_rows(meg_elements %<>%
                      dplyr::filter(Element %in% meg_included_elements,
-                                   `Proximal/distal` %in% c("Proximal","Distal")
+                                   Portion %in% c("Proximal","Distal")
                      ) %>%
-                     dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(meg_elements$`Proximal/distal`),
-                                                              ordered = TRUE))) %>%
+                     dplyr::mutate(Portion = factor(Portion, 
+                                                    levels = levels(meg_elements$Portion),
+                                                    ordered = TRUE))) %>%
   dplyr::group_by_all() %>%
   dplyr::count() %>%
   dplyr::right_join(expand.grid(Dataset = integration.data$Dataset %>% unique(),
                                 Element = meg_included_elements,
-                                `Proximal/distal` = c("Proximal","Distal"),
+                                Portion = c("Proximal","Distal"),
                                 stringsAsFactors = FALSE) %>%
                       tibble::as_tibble() %>%
-                      dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
-                                                               levels = levels(meg_elements$`Proximal/distal`),
-                                                               ordered = TRUE)),
+                      dplyr::mutate(Portion = factor(Portion, 
+                                                     levels = levels(meg_elements$Portion),
+                                                     ordered = TRUE)),
                     by = c("Dataset", 
                            "Element", 
-                           "Proximal/distal")) %>%
+                           "Portion")) %>%
   dplyr::mutate(n = ifelse(is.na(n),0,n))
 
 meg_survivorship <- meg_elements %>%
   dplyr::left_join(readr::read_csv("./data/raw_data/Meleagris_density.csv",
                                    col_types = readr::cols(
                                      Element = readr::col_character(),
-                                     `Proximal/distal` = readr::col_character(),
+                                     Portion = readr::col_character(),
                                      Density = readr::col_double()
                                    )) %>%
-                     dplyr::mutate(`Proximal/distal` = factor(`Proximal/distal`, 
-                                                              levels = levels(meg_elements$`Proximal/distal`),
-                                                              ordered = TRUE)),
+                     dplyr::mutate(Portion = factor(Portion, 
+                                                    levels = levels(meg_elements$Portion),
+                                                    ordered = TRUE)),
                    by = c("Element", 
-                          "Proximal/distal")) %>%
+                          "Portion")) %>%
   dplyr::filter(!is.na(Density)) %>%
   dplyr::group_by(Dataset) %>%
   dplyr::summarize(`sample size` = sum(n, na.rm = TRUE),

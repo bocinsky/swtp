@@ -1,5 +1,7 @@
 ---
 output: github_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -32,6 +34,13 @@ You can install this compendium as an R package, swtp, from GitHub with:
 ```{r gh-installation, eval = FALSE}
 # install.packages("remotes")
 remotes::install_github("bocinsky/swtp")
+```
+
+### Building the report
+```{r build, eval = FALSE}
+rmarkdown::render("./paper/swtp.Rmd", 
+                  output_file = "index.html", 
+                  output_dir = "./docs")
 ```
 
 ### Licenses

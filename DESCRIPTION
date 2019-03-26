@@ -3,18 +3,21 @@ Title: The Southwest Taphonomic Protocol
 Version: 1.0.0.9000
 Authors@R: person("Kyle", "Bocinsky", email = "bocinsky@gmail.com", role = c("aut", "cre"))
 Description: This is the Southwest Taphonomic Protocol.
-Depends: R (>= 3.5),
+Depends: 
+    R (>= 3.5),
     magrittr,
-    rlang
+    rlang,
+    treecats
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Suggests: knitr,
+Suggests: 
+    knitr,
     rmarkdown
 VignetteBuilder: knitr
 Imports: 
     bookdown,
-    dplyr,
+    dplyr (>= 0.8.0),
     RColorBrewer,
     plotly,
     htmlwidgets,
@@ -30,9 +33,9 @@ Imports:
     purrr,
     readr,
     stringr,
-    tdar,
     tibble,
     tidyr,
-    treecats
-Remotes: github::bocinsky/tdar,
+    tdar
+Remotes: 
+    github::bocinsky/tdar,
     github::bocinsky/treecats
