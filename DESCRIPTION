@@ -39,3 +39,4 @@ Imports:
 Remotes: 
     github::bocinsky/tdar,
     github::bocinsky/treecats
+RoxygenNote: 6.1.1
