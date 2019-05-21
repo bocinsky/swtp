@@ -8,11 +8,7 @@ jobs:
       - run:
           name: Install
           command: |
-              R -e 'devtools::install(".", dependencies = TRUE, upgrade_dependencies = FALSE, local = FALSE)'
-      - run:
-          name: DT test
-          command: |
-              R -e 'DT:::depPath()'
+              R -e 'devtools::install(".", dependencies = TRUE, upgrade_dependencies = FALSE)'
       - run:
           name: Render paper
           command: |
