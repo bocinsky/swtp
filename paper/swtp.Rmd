@@ -17,6 +17,9 @@ csl: "./templates/society-for-american-archaeology.csl"
 link-citations: true
 editor_options: 
   chunk_output_type: console
+params:
+  tdar_un: "`r Sys.getenv('tdar_un')`"
+  tdar_pw: "`r Sys.getenv('tdar_pw')`"
 ---
 
 ```{r setup, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE, collapse=TRUE, cache=FALSE, results = 'hide'}
@@ -241,8 +244,8 @@ To visually compare the distribution of taphonomic data by variable, the proport
 ```{r get-tdar-integration, results='hide'}
 integration_xlsx <- "./data/raw_data/tdar-integration-SWTP_20190228.xlsx"
 
-tdar::tdar_login(tdar_user = Sys.getenv("tdar_un"),
-                 tdar_password = Sys.getenv("tdar_pw"))
+tdar::tdar_login(tdar_user = params$tdar_un,
+                 tdar_password = params$tdar_pw)
 
 integration.data <- 
   integration_xlsx %>%

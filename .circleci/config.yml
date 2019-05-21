@@ -12,7 +12,7 @@ jobs:
       - run:
           name: Render paper
           command: |
-              R -e "rmarkdown::render('./paper/swtp.Rmd', output_file = '../docs/index.html')"
+              R -e "rmarkdown::render('./paper/swtp.Rmd', output_file = '../docs/index.html', params = list(tdar_un = '$tdar_un', tdar_pw = '$tdar_pw'))"
 
 workflows:
   version: 2
