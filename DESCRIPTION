@@ -35,7 +35,8 @@ Imports:
     stringr,
     tibble,
     tidyr,
-    tdar
+    tdar,
+    writexl
 Remotes: 
     github::bocinsky/tdar,
     github::bocinsky/treecats
