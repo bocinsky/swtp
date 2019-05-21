@@ -241,7 +241,8 @@ To visually compare the distribution of taphonomic data by variable, the proport
 ```{r get-tdar-integration, results='hide'}
 integration_xlsx <- "./data/raw_data/tdar-integration-SWTP_20190228.xlsx"
 
-tdar::tdar_login()
+tdar::tdar_login(tdar_user = Sys.getenv("tdar_un"),
+                 tdar_password = Sys.getenv("tdar_pw"))
 
 integration.data <- 
   integration_xlsx %>%
@@ -972,7 +973,6 @@ bone_weight_plot <- function(x){
     plotly::ggplotly(tooltip = "text") %>%
     plotly::config(displaylogo = F,
                    scrollZoom = F,
-                   collaborate = FALSE,
                    modeBarButtonsToRemove = list("toggleSpikelines",
                                                  "hoverClosestCartesian",
                                                  "hoverCompareCartesian",
