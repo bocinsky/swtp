@@ -3,12 +3,13 @@
 
 # swtp
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3647599.svg)](https://doi.org/10.5281/zenodo.3647599)
 [![CircleCI](https://circleci.com/gh/bocinsky/swtp.svg?style=shield&circle-token=182c3ee96956e3cc5eac1044a4c177ac28d39d91)](https://circleci.com/gh/bocinsky/swtp)
 
 This repository contains the data and code for our paper:
 
-> Bocinsky, R. Kyle, Tiffany Clark, and Katherine A. Spielmann, *In
-> review*. *The Southwestern Taphonomic Protocol*. **In review.**
+> Bocinsky, R. Kyle, Tiffany Clark, and Katherine A. Spielmann, (2020).
+> *The Southwestern Taphonomic Protocol*. **In review.**
 
 ### How to cite
 
