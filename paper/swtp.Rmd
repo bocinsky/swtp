@@ -1,5 +1,5 @@
 ---
-title: "The Southwestern Taphonomic Protocol"
+title: "A Southwestern Taphonomic Protocol"
 author:
 - name: R. Kyle Bocinsky
   affiliation: Crow Canyon Archaeological Center
@@ -8,7 +8,7 @@ author:
 - name: Katherine A. Spielmann
   affiliation: Arizona State University
 date: "`r format(Sys.time(), '%B %d, %Y')`"
-abstract: "In undertaking integrative analyses of large numbers of faunal datasets, analysts must examine the degree to which zooarchaeological remains from different sites have been differentially affected by taphonomic processes in order to decide which datasets to include in their substantive analyses and which are too differently modified to use. For the NSF-funded project, *Faunal Resource Depression and Intensification in the North American Southwest*, thirty-two datasets were uploaded and integrated in the Digital Archaeological Record (tDAR) to evaluate whether there was a relationship between reduction in availability of large game and intensification of turkey production between 1200 and 1500 C.E. As part of the project, we developed a taphonomic protocol that involved a number of variables to assess variability in taphonomic history among the site assemblages. We then developed an executable paper for the protocol so that it could be routinely used, or modified as necessary by other researchers. In this paper we briefly discuss the development of the Southwestern Taphonomic Protocol and then execute it on the thirty-two datasets. We conclude with a discussion of the utility of different variables in the protocol and the implications of the results of the taphonomic analysis for inclusion of sites in the next stage of the project."
+abstract: "In undertaking integrative analyses of large numbers of faunal datasets, analysts must examine the degree to which zooarchaeological remains from different sites have been differentially affected by taphonomic processes in order to decide which datasets to include in their substantive analyses and which are too differently modified to use. For the NSF-funded project, *Faunal Resource Depression and Intensification in the North American Southwest*, thirty-two datasets were uploaded and integrated in the Digital Archaeological Record (tDAR) to evaluate whether there was a relationship between reduction in availability of large game and intensification of turkey production between 1200 and 1500 C.E. As part of the project, we developed a taphonomic protocol that involved a number of variables to assess variability in taphonomic history among the site assemblages. We then developed an executable paper for the protocol so that it could be routinely used, or modified as necessary by other researchers. In this paper we briefly discuss the development of this Southwestern Taphonomic Protocol and then execute it on the thirty-two datasets. We conclude with a discussion of the utility of different variables in the protocol and the implications of the results of the taphonomic analysis for inclusion of sites in the next stage of the project."
 output:
   bookdown::html_document2:
     df_print: paged
@@ -1896,3 +1896,4 @@ file.copy("./tables/SWTP_Tables.xlsx",
 
 <!-- The following line ensures the references appear here for the MS Word or HTML output files, rather than right at the end of the document (this will not work for PDF files):  -->
 <div id="refs"></div>
+<script src="https://hypothes.is/embed.js" async></script>
