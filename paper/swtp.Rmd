@@ -18,12 +18,9 @@ output:
     toc_depth: 3
     toc_float:
       collapsed: yes
-  bookdown::word_document2:
-    fig_caption: yes
-    toc: no
 always_allow_html: yes
 bibliography: references.bib
-csl: "./templates/society-for-american-archaeology.csl"
+csl: "./templates/journal-of-computer-applications-in-archaeology.csl"
 link-citations: true
 editor_options: 
   chunk_output_type: console
@@ -252,7 +249,7 @@ Given that these assemblages had been analyzed and recorded by multiple faunal a
 Inter-site comparative analyses of the fauna data also necessitated an examination of the degree to which the zooarchaeological remains from these different sites had been affected by taphonomic processes [@Bar-Oz2003;  @Gifford1981; @Lyman1994; @Lyman2010]. To assess variability in taphonomic history, Tiffany Clark -@Clark2014 developed a protocol that explores the degree to which different taphonomic factors played a role in assemblage formation. At the end of her portion of the project, we were concerned by the challenge of undertaking analyses of the diversity of taphonomic variables that were included in the protocol. Kyle Bocinsky thus joined the project to help develop this executable paper for the protocol so that it can be routinely used, or modified as necessary, by other researchers interested in the integrated analysis of faunal data. @Clark2014 contains details regarding the development of the protocol.
 
 ## Overview
-The remainder of this paper briefly discusses the development of the taphonomic protocol and executes it on the 32 faunal data sets included as part of our project. This analysis was developed as an R Markdown document --- essentially, a text file that includes computer code in the R statistical language that runs all of the analyses discussed here and produces the figures and tables in this document. The HTML or PDF version of this paper (which you are probably reading) is "compiled" from that original text document and related data files, which were developed at https://github.com/bocinsky/swtp and are archived at [ZENODO ARCHIVE URL HERE]. R Markdown allows for dynamic, data-driven analysis and report writing, and fosters reproducible research. As such, we hope that this document will not only serve as an introduction to the Southwestern Taphonomic Protocol, but will also be a template for others’ implementations of (or alterations to) it; we are currently developing an interactive tool to allow researchers to analyze their own data without having to change the R code. Details on using R Markdown can be found at http://rmarkdown.rstudio.com. The executable paper attempts to follow guidelines developed by Ben Marwick -@Marwick2017 for practicing reproducible computing in archaeological research, and was developed using the [*rrtools*](https://github.com/benmarwick/rrtools) package for R [@rrtools].
+The remainder of this paper briefly discusses the development of the taphonomic protocol and executes it on the 32 faunal data sets included as part of our project. This analysis was developed as an R Markdown document --- essentially, a text file that includes computer code in the R statistical language that runs all of the analyses discussed here and produces the figures and tables in this document. The HTML or PDF version of this paper (which you are probably reading) is "compiled" from that original text document and related data files, which were developed at https://github.com/bocinsky/swtp and are archived at https://doi.org/10.5281/zenodo.3256448. R Markdown allows for dynamic, data-driven analysis and report writing, and fosters reproducible research. As such, we hope that this document will not only serve as an introduction to the Southwestern Taphonomic Protocol, but will also be a template for others’ implementations of (or alterations to) it; we are currently developing an interactive tool to allow researchers to analyze their own data without having to change the R code. Details on using R Markdown can be found at http://rmarkdown.rstudio.com. The executable paper attempts to follow guidelines developed by Ben Marwick -@Marwick2017 for practicing reproducible computing in archaeological research, and was developed using the [*rrtools*](https://github.com/benmarwick/rrtools) package for R [@rrtools].
 
 -----
 
