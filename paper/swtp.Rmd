@@ -1886,6 +1886,7 @@ c(main_tables, supplemental_tables) %>%
 file.copy("data/raw_data/tdar-integration-SWTP.xlsx", 
           "../docs/tdar-integration-SWTP.xlsx", 
           overwrite = TRUE)
+
 file.copy("./tables/SWTP_Tables.xlsx", 
           "../docs/SWTP_Tables.xlsx", 
           overwrite = TRUE)
