@@ -1,6 +1,6 @@
 Package: swtp
 Title: The Southwest Taphonomic Protocol
-Version: 1.0.0.9000
+Version: 1.0.0
 Authors@R: person("Kyle", "Bocinsky", email = "bocinsky@gmail.com", role = c("aut", "cre"))
 Description: This is the Southwest Taphonomic Protocol.
 Depends: 
@@ -40,4 +40,4 @@ Imports:
 Remotes: 
     github::bocinsky/tdar,
     github::bocinsky/treecats
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
