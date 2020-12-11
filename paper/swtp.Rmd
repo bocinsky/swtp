@@ -284,7 +284,7 @@ To visually compare the distribution of taphonomic data by variable, the proport
 # Analysis and Discussion
 
 ```{r get-tdar-integration, results='hide'}
-integration_xlsx <- "./data/raw_data/tdar-integration-SWTP_20190228.xlsx"
+integration_xlsx <- "./data/raw_data/tdar-integration-SWTP.xlsx"
 
 tdar::tdar_login(tdar_user = params$tdar_un,
                  tdar_password = params$tdar_pw)
@@ -455,7 +455,7 @@ We then added integration columns (Figure \@ref(fig:tdar-instructions-taxon)). T
 knitr::include_graphics("./screenshots/integration_taxon.png")
 ```
 
-Once all integration columns were selected (Figure \@ref(fig:tdar-instructions-all)), we requested the tDAR servers to process the integration. Due to the large amount of data in these datasets, the integration tool timed out and we had to request the integration output from the tDAR staff directly (they happily provided it many, many times). [The raw output from our tDAR integration reported in this paper is available here.](https://github.com/bocinsky/swtp/raw/master/paper/data/raw_data/tdar-integration-SWTP.xlsx) The processed data are reported in Supplementary Table `r which(names(supplemental_tables) == "Integrated Data")`.
+Once all integration columns were selected (Figure \@ref(fig:tdar-instructions-all)), we requested the tDAR servers to process the integration. Due to the large amount of data in these datasets, the integration tool timed out and we had to request the integration output from the tDAR staff directly (they happily provided it many, many times). [The raw output from our tDAR integration reported in this paper is available here.](tdar-integration-SWTP.xlsx) The processed data are reported in Supplementary Table `r which(names(supplemental_tables) == "Integrated Data")`. [All tabular data presented here and in supplementary information can be downloaded here.](SWTP_Tables.xlsx)
 
 ```{r tdar-instructions-all, fig.cap='Screen capture of the tDAR integration tool showing the count, display, and integration columns.'}
 knitr::include_graphics("./screenshots/integration_all.png")
@@ -544,7 +544,7 @@ In the initial stages of developing this executable paper we found that there we
 
 Related to thresholds, a number of assemblages used the coding option of "indeterminate." While this meant that the variable was indeed coded for all of the cases, the actual content of that coding did not contribute information to the interpretation of how prevalent the taphonomic condition was in that assemblage. We thus chose to consider those cases uncoded for analyzing taphonomic differences across sites. Therefore sites with more than 60 percent of the cases for each taxon coded as "indeterminate" fell below the minimum of threshold of 40 percent coded and were not included in the calculation of that variable.
 
-Table \@ref(tab:data-inclusion) shows which datasets were included in each analysis for each taxon after thresholding. Table \@ref(tab:data-inclusion-count) provides the number of datasets included in each analysis. Note that the assemblage completeness and bone survivorship analyses are not included in these tables.
+Table \@ref(tab:data-inclusion) shows which datasets were included in each analysis for each taxon after thresholding. Table `r which(names(supplemental_tables) == "Data Inclusion Count")` provides the number of datasets included in each analysis. Note that the assemblage completeness and bone survivorship analyses are not included in these tables.
 
 ```{r data-inclusion, results='asis'}
 
@@ -1822,7 +1822,7 @@ In this paper we immersed ourselves in the application of the Southwestern Tapho
 
 In developing the original Southwestern Taphonomic Protocol, @Clark2014 drew from global faunal literature and several pilot analyses to identify those variables most likely to be effective in distinguishing different aspects of taphonomic histories in southwestern faunal assemblages. In our implementation we found that some of these variables are more useful simply because they tend to be coded by more analysts. More engagement with taphonomic analyses might encourage zooarchaeologists to expand their coding to include at least some of the other variables used in the protocol. In addition, as we noted earlier in this paper, in some datasets relevant taphonomic data had been coded in a catchall variable that included multiple factors such as butchering, gnawing, and weathering. Coding these variables separately would make them more amenable to taphonomic analysis. The fact that they are already analyzed in these datasets should make it relatively straightforward to disaggregate the catchall variable since variable states have already been identified.
 
-We have realized that, given the relative lack of attention to taphonomic variables, at least in the US Southwest, it is not surprising that bone mineral density (used in our bone survivorship analysis) has emerged over the decades as a dominant variable in taphonomic analyses. The basic data (element) that this variable requires are available in most datasets. Table \@ref(tab:data-inclusion-count) presents the number of datasets for which there were different types of taphonomic data.
+We have realized that, given the relative lack of attention to taphonomic variables, at least in the US Southwest, it is not surprising that bone mineral density (used in our bone survivorship analysis) has emerged over the decades as a dominant variable in taphonomic analyses. The basic data (element) that this variable requires are available in most datasets. Table `r which(names(supplemental_tables) == "Data Inclusion Count")` presents the number of datasets for which there were different types of taphonomic data.
 
 The least available SWTP data involved specific elements, artiodactyl astragali and 3rd phalanx. Sample sizes were often quite small and thus the confidence intervals are generally too large for their fragmentation rates to be useful in distinguishing among sites.
 
@@ -1882,6 +1882,13 @@ supplemental_tables  %<>%
 
 c(main_tables, supplemental_tables) %>%
   writexl::write_xlsx("./tables/SWTP_Tables.xlsx")
+
+file.copy("data/raw_data/tdar-integration-SWTP.xlsx", 
+          "../docs/tdar-integration-SWTP.xlsx", 
+          overwrite = TRUE)
+file.copy("./tables/SWTP_Tables.xlsx", 
+          "../docs/SWTP_Tables.xlsx", 
+          overwrite = TRUE)
 
 ```
 
