@@ -13,7 +13,8 @@ Encoding: UTF-8
 LazyData: true
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    webshot
 VignetteBuilder: knitr
 Imports: 
     bookdown,
@@ -23,7 +24,6 @@ Imports:
     htmlwidgets,
     DT,
     bibtex,
-    knitcitations,
     kableExtra,
     psych,
     readxl,
